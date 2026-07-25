@@ -28,7 +28,7 @@ app = FastAPI(
         "persistence are explicitly deferred to PR 2."
     ),
 )
-setattr(app, "openapi", lambda: build_openapi(app))
+app.openapi = lambda: build_openapi(app)
 
 
 @app.middleware("http")
