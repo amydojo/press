@@ -3,8 +3,8 @@ from enum import StrEnum
 from typing import Annotated, Self
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
-from pydantic.networks import AnyHttpUrl
 from pydantic.alias_generators import to_camel
+from pydantic.networks import AnyHttpUrl
 
 
 class PressingStatus(StrEnum):

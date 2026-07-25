@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from press_generation_api.domain.models import PressingStatus
 
-
 ALLOWED_TRANSITIONS: dict[PressingStatus, frozenset[PressingStatus]] = {
     PressingStatus.DRAFT: frozenset({PressingStatus.PREPARING_SOURCE}),
     PressingStatus.PREPARING_SOURCE: frozenset(

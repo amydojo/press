@@ -3,7 +3,6 @@ from pathlib import Path
 
 from press_generation_api.main import app
 
-
 OUTPUT = Path(__file__).resolve().parents[1] / "openapi.json"
 
 

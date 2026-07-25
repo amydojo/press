@@ -9,7 +9,6 @@ from press_generation_api.domain.state_machine import (
     transition,
 )
 
-
 ALLOWED_PAIRS = {
     (current, target) for current, targets in ALLOWED_TRANSITIONS.items() for target in targets
 }

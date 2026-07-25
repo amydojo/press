@@ -3,7 +3,6 @@ from pydantic import ValidationError
 
 from press_generation_api.domain.models import CreatePressingRequest, SourceType
 
-
 BASE = {
     "selectedFragment": "A good interface pauses.",
     "personalNote": "The pacing feels like music.",
