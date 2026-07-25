@@ -1,26 +1,20 @@
 name: Bootstrap generated foundation files
 
 on:
-  workflow_dispatch:
   pull_request:
     branches: [main]
-  push:
-    branches: [feat/foundation-contracts]
-    paths:
-      - package.json
-      - pnpm-workspace.yaml
-      - apps/web/package.json
-      - packages/contracts/package.json
-      - services/generation-api/pyproject.toml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   generate:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: pnpm/action-setup@v4
         with:
           version: 10.14.0
@@ -38,6 +32,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: uv sync --project services/generation-api --frozen
       - run: pnpm contracts:generate
+      - name: Commit generated foundation files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml services/generation-api/uv.lock services/generation-api/openapi.json packages/contracts/src/generated/api.ts
+          if git diff --cached --quiet; then
+            echo "Generated files are already current."
+          else
+            git commit -m "chore: pin dependency locks and generated contracts"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: press-generated-foundation-files
