@@ -82,9 +82,10 @@ class CreatePressingRequest(ApiModel):
             if self.source_url is not None:
                 raise ValueError("Screenshot sources cannot include sourceUrl")
 
-        if self.source_type is SourceType.FIXTURE:
-            if self.source_url is not None or self.source_upload_id is not None:
-                raise ValueError("Fixture sources require neither sourceUrl nor sourceUploadId")
+        if self.source_type is SourceType.FIXTURE and (
+            self.source_url is not None or self.source_upload_id is not None
+        ):
+            raise ValueError("Fixture sources require neither sourceUrl nor sourceUploadId")
 
         return self
 
