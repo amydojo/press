@@ -5,7 +5,7 @@ import pytest
 from press_generation_api.domain.models import PressingStatus
 from press_generation_api.domain.state_machine import (
     ALLOWED_TRANSITIONS,
-    InvalidPressingTransition,
+    InvalidPressingTransitionError,
     transition,
 )
 
@@ -27,5 +27,5 @@ def test_every_allowed_transition(current: PressingStatus, target: PressingStatu
     ("current", "target"), sorted(REJECTED_PAIRS, key=lambda pair: (pair[0], pair[1]))
 )
 def test_every_rejected_transition(current: PressingStatus, target: PressingStatus) -> None:
-    with pytest.raises(InvalidPressingTransition):
+    with pytest.raises(InvalidPressingTransitionError):
         transition(current, target)
