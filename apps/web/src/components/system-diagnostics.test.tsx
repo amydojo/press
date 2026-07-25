@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SystemDiagnostics } from "@/components/system-diagnostics";
@@ -11,10 +11,12 @@ vi.mock("@/lib/system-client", () => ({
 const mockedLoad = vi.mocked(loadSystemDiagnostics);
 
 describe("SystemDiagnostics", () => {
-  beforeEach(() => mockedLoad.mockReset());
+  beforeEach(() => {
+    mockedLoad.mockReset();
+  });
 
   it("shows loading before the diagnostics resolve", () => {
-    mockedLoad.mockReturnValue(new Promise(() => undefined));
+    mockedLoad.mockImplementation(() => new Promise(() => undefined));
     render(<SystemDiagnostics />);
     expect(screen.getByText("Generation API status: loading")).toBeInTheDocument();
   });
@@ -61,11 +63,11 @@ describe("SystemDiagnostics", () => {
   });
 
   it("handles a malformed internal diagnostics response", async () => {
-    mockedLoad.mockRejectedValue(new Error("invalid internal payload"));
+    mockedLoad.mockImplementation(async () => {
+      throw new Error("invalid internal payload");
+    });
     render(<SystemDiagnostics />);
 
-    await waitFor(() => {
-      expect(screen.getByText("Diagnostics response malformed.")).toBeInTheDocument();
-    });
+    expect(await screen.findByText("Diagnostics response malformed.")).toBeInTheDocument();
   });
 });
