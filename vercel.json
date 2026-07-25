@@ -1,28 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "services": {
+  "experimentalServices": {
     "web": {
-      "root": "apps/web",
-      "framework": "nextjs"
+      "entrypoint": "apps/web",
+      "routePrefix": "/"
     },
     "generation-api": {
-      "root": "services/generation-api"
+      "entrypoint": "services/generation-api/src/press_generation_api/main.py",
+      "routePrefix": "/api/generation-api"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/generation-api(/.*)?",
-      "destination": {
-        "type": "service",
-        "service": "generation-api"
-      }
-    },
-    {
-      "source": "/(.*)",
-      "destination": {
-        "type": "service",
-        "service": "web"
-      }
-    }
-  ]
+  }
 }
