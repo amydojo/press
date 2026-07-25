@@ -31,7 +31,7 @@ ALLOWED_TRANSITIONS: dict[PressingStatus, frozenset[PressingStatus]] = {
 
 
 @dataclass(frozen=True, slots=True)
-class InvalidPressingTransition(ValueError):
+class InvalidPressingTransitionError(ValueError):
     current: PressingStatus
     target: PressingStatus
 
@@ -45,5 +45,5 @@ def can_transition(current: PressingStatus, target: PressingStatus) -> bool:
 
 def transition(current: PressingStatus, target: PressingStatus) -> PressingStatus:
     if not can_transition(current, target):
-        raise InvalidPressingTransition(current=current, target=target)
+        raise InvalidPressingTransitionError(current=current, target=target)
     return target
