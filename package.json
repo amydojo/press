@@ -1,0 +1,37 @@
+{
+  "name": "press",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=22.16.0 <23",
+    "pnpm": ">=10.14.0 <11"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others --names web,api --prefix-colors auto \"pnpm dev:web\" \"pnpm dev:api\"",
+    "dev:web": "pnpm --filter @press/web dev",
+    "dev:api": "uv run --project services/generation-api uvicorn press_generation_api.main:app --reload --host 0.0.0.0 --port 8000",
+    "lint": "pnpm lint:web && pnpm lint:api",
+    "lint:web": "pnpm --filter @press/web lint",
+    "lint:api": "uv run --project services/generation-api ruff format --check services/generation-api && uv run --project services/generation-api ruff check services/generation-api",
+    "typecheck": "pnpm typecheck:web && pnpm typecheck:api && pnpm --filter @press/contracts typecheck",
+    "typecheck:web": "pnpm --filter @press/web typecheck",
+    "typecheck:api": "uv run --project services/generation-api mypy services/generation-api/src services/generation-api/scripts",
+    "test": "pnpm test:web && pnpm test:api",
+    "test:web": "pnpm --filter @press/web test",
+    "test:api": "uv run --project services/generation-api pytest services/generation-api/tests",
+    "build": "pnpm --filter @press/contracts typecheck && pnpm --filter @press/web build",
+    "e2e": "pnpm --filter @press/web e2e",
+    "contracts:generate": "uv run --project services/generation-api python services/generation-api/scripts/export_openapi.py && pnpm exec openapi-typescript services/generation-api/openapi.json -o packages/contracts/src/generated/api.ts && pnpm exec prettier --write services/generation-api/openapi.json packages/contracts/src/generated/api.ts",
+    "contracts:check": "pnpm contracts:generate && git diff --exit-code -- services/generation-api/openapi.json packages/contracts/src/generated/api.ts",
+    "security:client-bundle": "node scripts/check-client-secrets.mjs apps/web/.next/static"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "concurrently": "9.2.1",
+    "openapi-typescript": "7.10.1",
+    "prettier": "3.6.2",
+    "typescript": "6.0.3",
+    "wait-on": "8.0.4"
+  }
+}

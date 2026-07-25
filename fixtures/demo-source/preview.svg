@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Designing with rhythm fixture preview</title>
+  <desc id="desc">A restrained editorial card containing the deterministic demo fragment.</desc>
+  <rect width="1200" height="800" fill="#ece8df"/>
+  <text x="96" y="110" font-family="Arial, sans-serif" font-size="18" letter-spacing="5" fill="#615e57">LOCAL EXPERIMENTAL DESIGN FIXTURE</text>
+  <text x="96" y="250" font-family="Arial, sans-serif" font-size="62" fill="#171715">
+    <tspan x="96" dy="0">A good interface does not</tspan>
+    <tspan x="96" dy="78">move at one speed.</tspan>
+    <tspan x="96" dy="120">It pauses, repeats,</tspan>
+    <tspan x="96" dy="78">and changes tempo.</tspan>
+  </text>
+</svg>

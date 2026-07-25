@@ -1,0 +1,10 @@
+{
+  "fixtureVersion": "1.0",
+  "sourceType": "fixture",
+  "domain": "demo.press.local",
+  "title": "Designing with rhythm",
+  "fragment": "A good interface does not move at one speed. It pauses, repeats, and changes tempo.",
+  "exampleNote": "The pacing feels like music.",
+  "localHtmlPath": "fixtures/demo-source/source.html",
+  "previewPath": "fixtures/demo-source/preview.svg"
+}
