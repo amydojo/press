@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/foundation-contracts]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: press-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  PRESS_ENV: test
+  PRESS_VERSION: 0.1.0
+  API_BASE_URL: http://127.0.0.1:8000
+  NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+
+jobs:
+  web-checks:
+    name: Web checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint:web
+      - run: pnpm typecheck:web
+      - run: pnpm test:web
+      - name: Build web with secret sentinels
+        env:
+          B2_APPLICATION_KEY: press-ci-b2-secret-sentinel
+          GENBLAZE_PROVIDER_API_KEY: press-ci-provider-secret-sentinel
+        run: pnpm build
+      - name: Inspect client bundle for server-only credentials
+        run: pnpm security:client-bundle
+
+  api-checks:
+    name: API checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.10.0
+          enable-cache: true
+      - run: uv sync --project services/generation-api --frozen
+      - run: uv run --project services/generation-api ruff format --check services/generation-api
+      - run: uv run --project services/generation-api ruff check services/generation-api
+      - run: uv run --project services/generation-api mypy services/generation-api/src services/generation-api/scripts
+      - run: uv run --project services/generation-api pytest services/generation-api/tests
+
+  contract-check:
+    name: Contract drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.10.0
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --project services/generation-api --frozen
+      - run: pnpm contracts:check
+      - run: pnpm --filter @press/contracts typecheck
+
+  e2e-smoke:
+    name: E2E smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.10.0
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --project services/generation-api --frozen
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - name: Start services
+        run: |
+          uv run --project services/generation-api uvicorn press_generation_api.main:app --host 127.0.0.1 --port 8000 > /tmp/press-api.log 2>&1 &
+          pnpm --filter @press/web start > /tmp/press-web.log 2>&1 &
+          pnpm exec wait-on http-get://127.0.0.1:8000/healthz http-get://127.0.0.1:3000
+      - run: pnpm e2e
+      - name: Capture service logs
+        if: always()
+        run: |
+          cp /tmp/press-api.log apps/web/test-results/api.log || true
+          cp /tmp/press-web.log apps/web/test-results/web.log || true
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: press-foundation-browser-evidence
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          if-no-files-found: warn
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

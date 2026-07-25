@@ -1,0 +1,46 @@
+name: Bootstrap generated foundation files
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/foundation-contracts]
+    paths:
+      - package.json
+      - pnpm-workspace.yaml
+      - apps/web/package.json
+      - packages/contracts/package.json
+      - services/generation-api/pyproject.toml
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.10.0
+      - run: pnpm install --lockfile-only --no-frozen-lockfile
+      - run: uv lock --project services/generation-api
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --project services/generation-api --frozen
+      - run: pnpm contracts:generate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: press-generated-foundation-files
+          path: |
+            pnpm-lock.yaml
+            services/generation-api/uv.lock
+            services/generation-api/openapi.json
+            packages/contracts/src/generated/api.ts
