@@ -41,11 +41,7 @@
             "title": "Sourceurl"
           }
         },
-        "required": [
-          "sourceType",
-          "selectedFragment",
-          "personalNote"
-        ],
+        "required": ["sourceType", "selectedFragment", "personalNote"],
         "title": "CreatePressingRequest",
         "type": "object"
       },
@@ -115,11 +111,7 @@
         "type": "object"
       },
       "InternalArchetype": {
-        "enum": [
-          "scene",
-          "relic",
-          "signal"
-        ],
+        "enum": ["scene", "relic", "signal"],
         "title": "InternalArchetype",
         "type": "string"
       },
@@ -141,11 +133,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "code",
-          "message",
-          "arrivesIn"
-        ],
+        "required": ["code", "message", "arrivesIn"],
         "title": "NotImplementedDetail",
         "type": "object"
       },
@@ -156,9 +144,7 @@
             "$ref": "#/components/schemas/NotImplementedDetail"
           }
         },
-        "required": [
-          "detail"
-        ],
+        "required": ["detail"],
         "title": "NotImplementedResponse",
         "type": "object"
       },
@@ -380,11 +366,7 @@
         "type": "string"
       },
       "SourceType": {
-        "enum": [
-          "url",
-          "screenshot",
-          "fixture"
-        ],
+        "enum": ["url", "screenshot", "fixture"],
         "title": "SourceType",
         "type": "string"
       },
@@ -420,11 +402,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError",
         "type": "object"
       },
@@ -458,9 +436,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "version"
-        ],
+        "required": ["version"],
         "title": "VersionResponse",
         "type": "object"
       }
@@ -489,9 +465,7 @@
           }
         },
         "summary": "Healthz",
-        "tags": [
-          "system"
-        ]
+        "tags": ["system"]
       }
     },
     "/v1/pressings": {
@@ -540,9 +514,7 @@
           }
         },
         "summary": "Create Pressing",
-        "tags": [
-          "pressings"
-        ]
+        "tags": ["pressings"]
       }
     },
     "/version": {
@@ -561,9 +533,7 @@
           }
         },
         "summary": "Version",
-        "tags": [
-          "system"
-        ]
+        "tags": ["system"]
       }
     }
   }
