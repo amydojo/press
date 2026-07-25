@@ -23,9 +23,12 @@ jobs:
           version: 0.10.0
       - run: uv sync --project services/generation-api --frozen
       - name: Apply safe Ruff fixes and formatting
+        shell: bash
         run: |
-          uv run --project services/generation-api ruff check --fix services/generation-api
+          set +e
+          uv run --project services/generation-api ruff check --fix services/generation-api > ruff-fix.log 2>&1
           uv run --project services/generation-api ruff format services/generation-api
+          exit 0
       - name: Commit safe fixes if needed
         run: |
           git config user.name "github-actions[bot]"
@@ -45,6 +48,7 @@ jobs:
           echo "$?" > ruff-check.exit-code
           uv run --project services/generation-api mypy services/generation-api/src services/generation-api/scripts > mypy.log 2>&1
           echo "$?" > mypy.exit-code
+          cat ruff-fix.log
           cat ruff-check.log
           cat mypy.log
           exit 0
@@ -52,6 +56,7 @@ jobs:
         with:
           name: press-python-quality-diagnostics
           path: |
+            ruff-fix.log
             ruff-check.log
             ruff-check.exit-code
             mypy.log
