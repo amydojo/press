@@ -1,0 +1,60 @@
+name: One-use foundation repair
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.10.0
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --project services/generation-api --frozen
+      - name: Apply canonical Python formatting
+        run: uv run --project services/generation-api ruff format services/generation-api
+      - name: Commit formatting if needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services/generation-api
+          if git diff --cached --quiet; then
+            echo "Python files already formatted."
+          else
+            git commit -m "style(api): apply canonical Ruff formatting"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
+      - name: Capture strict TypeScript diagnostics
+        shell: bash
+        run: |
+          set +e
+          pnpm typecheck:web > typecheck-web.log 2>&1
+          status=$?
+          cat typecheck-web.log
+          echo "$status" > typecheck-web.exit-code
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: press-foundation-diagnostics
+          path: |
+            typecheck-web.log
+            typecheck-web.exit-code
