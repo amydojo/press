@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PressApiError } from "@/server/api/errors";
 import { fetchGenerationHealth } from "@/server/api/health";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -37,7 +36,7 @@ describe("typed generation API health client", () => {
       ),
     );
 
-    await expect(fetchGenerationHealth("malformed-test")).rejects.toMatchObject<PressApiError>({
+    await expect(fetchGenerationHealth("malformed-test")).rejects.toMatchObject({
       kind: "malformed_response",
     });
   });
@@ -45,7 +44,7 @@ describe("typed generation API health client", () => {
   it("maps network failures to a stable application error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("connection refused")));
 
-    await expect(fetchGenerationHealth("network-test")).rejects.toMatchObject<PressApiError>({
+    await expect(fetchGenerationHealth("network-test")).rejects.toMatchObject({
       kind: "network_error",
     });
   });
