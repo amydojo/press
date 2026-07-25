@@ -8,7 +8,7 @@ from press_generation_api.domain.models import (
 )
 from press_generation_api.domain.state_machine import (
     ALLOWED_TRANSITIONS,
-    InvalidPressingTransition,
+    InvalidPressingTransitionError,
     can_transition,
     transition,
 )
@@ -18,7 +18,7 @@ __all__ = [
     "CreatePressingRequest",
     "FailureCategory",
     "InternalArchetype",
-    "InvalidPressingTransition",
+    "InvalidPressingTransitionError",
     "PressingRecord",
     "PressingStatus",
     "SourceType",
