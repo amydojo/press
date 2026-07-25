@@ -15,7 +15,7 @@ test("PRESS foundation reaches the live generation API", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Foundation online." })).toBeVisible();
   await expect(page.getByText("Web status")).toBeVisible();
   await expect(page.getByText("Generation API status")).toBeVisible();
-  await expect(page.getAllByText("healthy")).toHaveCount(2);
+  await expect(page.getByText("healthy")).toHaveCount(2);
 
   await page.screenshot({ path: "test-results/system-diagnostics.png", fullPage: true });
   expect(consoleErrors).toEqual([]);
