@@ -20,7 +20,13 @@ from press_generation_api.openapi import build_openapi
 settings = get_settings()
 logger = configure_logging()
 
-app = FastAPI(
+
+class PressGenerationApi(FastAPI):
+    def openapi(self) -> dict[str, Any]:
+        return build_openapi(self)
+
+
+app = PressGenerationApi(
     title="PRESS Generation API",
     version=settings.PRESS_VERSION,
     description=(
@@ -28,7 +34,6 @@ app = FastAPI(
         "persistence are explicitly deferred to PR 2."
     ),
 )
-app.openapi = lambda: build_openapi(app)
 
 
 @app.middleware("http")
