@@ -1,0 +1,3 @@
+genblaze-core==0.3.7
+genblaze-openai==0.3.3
+genblaze-s3==0.3.6

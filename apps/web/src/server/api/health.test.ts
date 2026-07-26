@@ -13,9 +13,11 @@ describe("typed generation API health client", () => {
           JSON.stringify({
             status: "ok",
             service: "press-generation-api",
-            version: "0.1.0",
+            version: "0.2.0",
             environment: "test",
             timestamp: "2026-07-24T12:00:00+00:00",
+            liveProviderConfigured: false,
+            durableStorageConfigured: false,
           }),
           { status: 200, headers: { "content-type": "application/json" } },
         ),
@@ -25,6 +27,8 @@ describe("typed generation API health client", () => {
     await expect(fetchGenerationHealth("typed-contract-test")).resolves.toMatchObject({
       status: "ok",
       service: "press-generation-api",
+      liveProviderConfigured: false,
+      durableStorageConfigured: false,
     });
   });
 

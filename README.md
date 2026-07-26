@@ -2,78 +2,77 @@
 
 **Keep what made you stop.**
 
-PRESS is a mobile-first generative media product that turns an internet encounter into a collectible digital object called a pressing. A bookmark saves the page. A pressing is designed to preserve the exact fragment, the exact personal note, a generated miniature world, and its complete lineage.
+PRESS turns an internet encounter into a collectible digital object called a pressing. A bookmark saves the page. A pressing preserves the exact selected fragment, the exact personal note, a generated miniature world, a stable serial, and the lineage needed to prove how it was made.
 
 ## Current implementation status
 
-This repository currently contains PR 1 foundation work only:
+PR 2 implements the backend engine and durable memory defined by Issues #3 and #4:
 
-- Next.js web application with `/` and truthful `/system` diagnostics
-- FastAPI generation service with health, version, and explicit `501` create behavior
-- validated pressing domain model and exhaustive lifecycle transition tests
-- deterministic OpenAPI export and generated TypeScript API contracts
-- fictional local demo source fixture
-- local development commands, CI, security boundaries, and architecture documentation
+* FastAPI remains the Pydantic and OpenAPI contract authority
+* one deterministic fictional fixture can pass through structured source understanding and image generation
+* the live adapter uses Genblaze behind a provider boundary
+* generated assets are decoded, measured, checked for trivial blank output, uploaded, retrieved, and checksum verified
+* retry is bounded to three attempts with primary, corrected retry, and optional fallback model behavior
+* source records, immutable anchors, each attempt, validation, events, final metadata, provenance, and assets use stable private Backblaze B2 object keys
+* create, retry, and finalization are idempotent
+* completed pressings reconstruct after API process replacement without local memory
+* final assets are returned through short lived private access URLs that are never stored
+* deletion removes the pressing prefix and writes a separate tombstone, with non atomic behavior documented
 
-It does **not** yet generate media, persist to Backblaze B2, extract URLs, accept screenshots, render a collectible pressing, maintain an archive, authenticate users, deploy production services, or present final visual design.
+The repository still does not implement live URL extraction, screenshot upload, the collectible shell, archive UI, authentication, sharing, final motion, or production release. Those remain PR 3 through PR 5 scope.
 
-## Product promise
-
-The complete flow is:
-
-```text
-Landing
-→ Capture source
-→ Confirm exact fragment
-→ Record exact personal note
-→ Run a real Genblaze pipeline
-→ Store complete lineage in Backblaze B2
-→ Reveal a toy-adjacent pressing
-→ Tilt and flip it
-→ Keep it
-→ Refresh
-→ Reopen it from the archive
-→ Return to the original source
-```
-
-## Five-PR roadmap
-
-1. Foundation and typed contracts. Closes Issue #1.
-2. Sponsor backbone: Genblaze orchestration, progress, retry and fallback, B2 persistence, and record reconstruction. Closes Issues #3 and #4.
-3. Functional slice: source capture, pressing shell, keep, archive, reopen, and source return. Closes Issues #2, #6, and #8.
-4. Product character: visual system, chamber choreography, tilt, flip, keep, and reduced motion. Closes Issues #5 and #7.
-5. Release proof: accessibility, resilience, performance, deployment, live verification, and submission evidence. Closes Issues #9 and #10.
-
-See the [master roadmap](https://github.com/amydojo/press/issues/11) and [foundation issue](https://github.com/amydojo/press/issues/1).
-
-## Repository architecture
+## Architecture
 
 ```text
-apps/web/                    Next.js presentation and server API gateway
-services/generation-api/     FastAPI domain and future generation/storage authority
-packages/contracts/          generated TypeScript API types and fixture parser
-packages/config/             shared strict TypeScript policy
-fixtures/demo-source/        fictional deterministic local source
-scripts/                     repository verification scripts
+apps/web/                    Next.js presentation and diagnostics
+services/generation-api/     FastAPI domain, orchestration, storage, and repository authority
+packages/contracts/          OpenAPI generated TypeScript contracts
+fixtures/demo-source/        fictional deterministic input fixture
+scripts/                     security and repository checks
 docs/architecture/           ADRs and system context
-docs/evidence/               evidence policy and future authentic artifacts
-.github/workflows/            CI, contract, E2E, and secret scanning
+docs/evidence/               evidence policy and sanitized PR artifacts
+.github/workflows/           CI plus protected live sponsor verification
 ```
 
 Architecture decisions:
 
-- [ADR 0001: monorepo structure](docs/architecture/ADR-0001-monorepo-structure.md)
-- [ADR 0002: API contract source of truth](docs/architecture/ADR-0002-api-contract-source-of-truth.md)
-- [System context](docs/architecture/system-context.md)
+* [ADR 0001: monorepo structure](docs/architecture/ADR-0001-monorepo-structure.md)
+* [ADR 0002: API contract source of truth](docs/architecture/ADR-0002-api-contract-source-of-truth.md)
+* [ADR 0003: sponsor backbone execution model](docs/architecture/ADR-0003-sponsor-backbone.md)
+* [System context](docs/architecture/system-context.md)
+
+## Runtime flow
+
+```text
+Normalize source
+→ persist immutable anchors
+→ understand encounter with a strict schema
+→ select scene, relic, or signal
+→ build a privacy safe generation brief
+→ generate an internal world through Genblaze
+→ validate bytes, MIME, dimensions, blank output, and metadata
+→ upload and retrieve from private B2
+→ retry or fall back when bounded policy allows
+→ persist attempt lineage, final metadata, provenance, and progress
+→ return ready with temporary private asset access
+```
+
+Progress is available through persistent polling. The required stages are preparing source, understanding fragment, creating miniature world, rendering pressing, saving pressing, retrying generation, ready, and failed.
+
+## Execution model
+
+FastAPI schedules processing as an in process background task. Durable checkpoints and events survive process replacement. Completed pressing reconstruction is verified from B2 alone.
+
+This PR does not claim crash safe in flight work. An external queue, lease ownership, and distributed serial allocator remain later production hardening.
 
 ## Required tools
 
-- Node.js 22.16.0
-- pnpm 10.14.0 through Corepack
-- Python 3.13.5
-- uv 0.10.0 or compatible
+* Node.js 22.16.0
+* pnpm 10.14.0 through Corepack
+* Python 3.13.5
+* uv 0.10.0 or compatible
 
-## Local setup
+## Local fixture setup
 
 ```bash
 corepack enable
@@ -83,78 +82,141 @@ cp .env.example .env
 pnpm dev
 ```
 
-`pnpm dev` starts the Next.js web app at `http://localhost:3000` and the FastAPI service at `http://localhost:8000`.
+Fixture mode is enabled by default for development and tests. It creates deterministic PNG bytes and an explicitly labeled fixture manifest. It is not proof of live generation or live storage.
 
-## Canonical commands
+## Live sponsor setup
+
+Install the exact verified sponsor package set after the normal locked environment:
 
 ```bash
-pnpm dev
-pnpm dev:web
-pnpm dev:api
+uv pip install \
+  --python services/generation-api/.venv/bin/python \
+  --requirement services/generation-api/requirements-live.txt
+```
+
+The live package boundary is pinned to:
+
+* `genblaze-core==0.3.7`
+* `genblaze-openai==0.3.3`
+* `genblaze-s3==0.3.6`
+
+Configure a least privilege Backblaze application key limited to the private PRESS bucket. Do not use a master application key. Do not make the bucket public.
+
+## Environment variables
+
+`.env.example` contains blank or fake values only.
+
+| Variable | Boundary | Purpose |
+| --- | --- | --- |
+| `PRESS_ENV` | server | development, test, preview, or production |
+| `PRESS_VERSION` | server and diagnostics | runtime version |
+| `API_BASE_URL` | Next.js server | FastAPI base URL |
+| `NEXT_PUBLIC_APP_URL` | browser safe | public web origin only |
+| `GENBLAZE_PROVIDER` | API server | provider selector, currently `openai` |
+| `GENBLAZE_PROVIDER_API_KEY` | API server secret | provider credential |
+| `GENBLAZE_UNDERSTANDING_MODEL` | API server | structured understanding model |
+| `GENBLAZE_PRIMARY_MODEL` | API server | primary image model |
+| `GENBLAZE_FALLBACK_MODEL` | API server | optional final fallback model |
+| `GENERATION_TIMEOUT_SECONDS` | API server | bounded provider timeout |
+| `MAX_GENERATION_ATTEMPTS` | API server | hard maximum, one through three |
+| `B2_KEY_ID` | API server secret | application key ID |
+| `B2_APPLICATION_KEY` | API server secret | application key secret |
+| `B2_BUCKET_NAME` | API server | private bucket |
+| `B2_ENDPOINT` | API server | HTTPS S3 compatible endpoint |
+| `B2_REGION` | API server | B2 region |
+| `B2_PRESIGNED_URL_LIFETIME_SECONDS` | API server | short lived private access |
+| `FIXTURE_MODE` | API server | deterministic non live provider boundary |
+| `LIVE_INTEGRATION_TEST` | protected verification | explicit live test opt in |
+| `LIVE_FORCE_RETRY_ONCE` | protected verification | one intentional real recovery probe |
+
+`DEMO_MODE` remains accepted as a compatibility alias for `FIXTURE_MODE`. Sponsor credentials must never use a `NEXT_PUBLIC_` prefix.
+
+## API
+
+* `POST /v1/pressings` creates an idempotent pressing and schedules processing
+* `GET /v1/pressings` lists durable records
+* `GET /v1/pressings/{id}` reconstructs a durable record and derives temporary asset access when ready
+* `GET /v1/pressings/{id}/events` returns ordered persisted progress
+* `POST /v1/pressings/{id}/retry` creates one bounded retry request
+* `DELETE /v1/pressings/{id}` deletes the pressing prefix and records a tombstone
+* `GET /healthz` and `GET /version` preserve system diagnostics
+
+Errors use stable typed bodies for invalid input, conflict, retry limit, provider authentication, authorization, rate limit, timeout, malformed output, asset validation, storage failures, and internal failures. Stack traces and raw SDK responses are not public API data.
+
+## B2 object tree
+
+```text
+pressings/{pressing-id}/
+  source/
+    source.json
+    fragment.json
+    note.json
+  generations/{run-id}/
+    understanding.json
+    asset.png | asset.jpg | asset.webp
+    manifest.json
+    evaluation.json
+  events/
+    progress.jsonl
+  state/
+    current.json
+  final/
+    internal-world.png
+    metadata.json
+    provenance.json
+```
+
+Idempotency records, the serial counter, and deletion tombstones live outside the pressing prefix. Signed URLs never appear in canonical records.
+
+## Retry policy
+
+1. primary provider and model
+2. corrected brief or transient retry on the primary model
+3. configured fallback model when present, otherwise a final corrected primary attempt
+
+Every attempt gets a unique run ID and directory. The pressing ID, serial, selected fragment, personal note, submitted source identity, and prior attempts never change.
+
+## Verification
+
+```bash
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-pnpm contracts:generate
 pnpm contracts:check
 pnpm e2e
 ```
 
-Equivalent Make targets are `make install`, `make dev`, `make test`, and `make check`. The pnpm workflow is canonical; Make is a thin convenience layer, not a competing toolchain.
+The normal CI path is secret free. It runs web checks, Python formatting, lint, strict type checking, API tests, OpenAPI drift, generated TypeScript type checking, Playwright smoke, client bundle credential inspection, and gitleaks.
 
-## Contract generation
+The manual `Live sponsor verification` workflow is the only workflow that consumes sponsor secrets. It uses the deterministic fixture as input, performs live Genblaze understanding and generation, forces one bounded validation retry, persists complete lineage to private B2, and reconstructs the pressing in a new Python process. Its sanitized JSON report is uploaded as a workflow artifact.
 
-Pydantic and FastAPI are the API contract source of truth.
+## Security and privacy
 
-```bash
-pnpm contracts:generate
-```
+* provider and B2 credentials are server only
+* the bucket remains private and is never listed publicly
+* object keys are server constructed and reject traversal, absolute paths, unsafe segments, unsupported MIME types, and oversized payloads
+* routine logs omit full selected fragments, full personal notes, source assets, API keys, authorization headers, and signed URLs
+* stable object keys are canonical; signed URLs are temporary derived responses
+* source fetching is not implemented in PR 2, so no unrestricted URL fetch exists
+* client bundle scanning uses sentinel secrets
 
-This exports `services/generation-api/openapi.json` and generates `packages/contracts/src/generated/api.ts`. Generated TypeScript is never hand edited.
+## Known limitations
 
-```bash
-pnpm contracts:check
-```
+* in flight work is process bound and not crash safe
+* serial allocation is safe for this single service process and persisted across restarts, but not yet a distributed compare and swap allocator
+* B2 prefix deletion is not atomic
+* the generation API has not been claimed as a production Vercel deployment
+* final shell rendering, capture UI, archive UI, and browser product flow remain PR 3
 
-This regenerates both files and fails if Git detects drift. CI also type checks the generated package.
+## Live completion gate
 
-## Environment variables
-
-`.env.example` contains fake or blank values only.
-
-| Variable | Runtime | PR 1 status |
-| --- | --- | --- |
-| `PRESS_ENV` | web server and API | used |
-| `PRESS_VERSION` | web server and API | used |
-| `API_BASE_URL` | Next.js server only | used |
-| `NEXT_PUBLIC_APP_URL` | browser-safe public URL | reserved |
-| `B2_KEY_ID` | API server only | unused until PR 2 |
-| `B2_APPLICATION_KEY` | API server only | unused until PR 2 |
-| `B2_BUCKET_NAME` | API server only | unused until PR 2 |
-| `B2_ENDPOINT` | API server only | unused until PR 2 |
-| `GENBLAZE_PROVIDER_API_KEY` | API server only | unused until PR 2 |
-| `DEMO_MODE` | API server | explicit fixture boundary |
-
-Sponsor credentials must never use `NEXT_PUBLIC_*`. Partial B2 configuration fails startup validation. No secret values are logged.
-
-## Deterministic demo fixture disclosure
-
-`fixtures/demo-source` is fictional local material. It exists for deterministic tests and recordings. It is not a live URL fetch and cannot be presented as evidence of source extraction. Live source support arrives later.
-
-## Tests and checks
-
-Web tests cover product identity, environment validation, healthy, unreachable, and malformed diagnostics, plus typed health-response parsing. API tests cover diagnostics, exact anchor preservation, source requirements, note length boundaries, explicit `501` behavior, and every allowed and rejected lifecycle transition. Playwright runs a mobile smoke test against both live local services and fails on browser console errors.
-
-CI also regenerates contracts, scans Git history for secrets, and inspects the built client bundle for server-only variable names and sentinel values.
-
-## Current limitations
-
-The create route validates the real request contract but always returns an explicit structured `501 Not Implemented`. This is intentional. The foundation does not claim live generation, storage, extraction, rendering, archive, authentication, deployment, or final product polish.
+Code, non secret tests, contracts, documentation, and the protected verifier can be completed without credentials. The PR remains draft until a protected live run proves a real provider asset, real private B2 lineage, one bounded recovery route, and process restart reconstruction. Missing credentials are never pasted into chat, source, logs, or a pull request.
 
 ## Next PR
 
-PR 2 will implement Issues #3 and #4: real Genblaze orchestration, honest progress events, bounded retry and fallback, Backblaze B2 persistence, immutable run manifests, and complete pressing record reconstruction after restart.
+PR 3 is the functional product slice and closes Issues #2, #6, and #8. It adds source capture, the pressing renderer, durable keep, archive, reopen, and source return. PR 3 does not begin on this branch.
 
 ## License
 
-MIT. The hackathon submission requirements call for an accessible GitHub repository and setup instructions but do not mandate a different repository license. Third-party dependencies retain their own licenses.
+MIT. Third party dependencies retain their own licenses.
