@@ -28,10 +28,63 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** List Pressings */
+    get: operations["list_pressings_v1_pressings_get"];
     put?: never;
     /** Create Pressing */
     post: operations["create_pressing_v1_pressings_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/pressings/{pressing_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Pressing */
+    get: operations["get_pressing_v1_pressings__pressing_id__get"];
+    put?: never;
+    post?: never;
+    /** Delete Pressing */
+    delete: operations["delete_pressing_v1_pressings__pressing_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/pressings/{pressing_id}/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Pressing Events */
+    get: operations["get_pressing_events_v1_pressings__pressing_id__events_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/pressings/{pressing_id}/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Retry Pressing */
+    post: operations["retry_pressing_v1_pressings__pressing_id__retry_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -59,32 +112,173 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /**
+     * AttemptStatus
+     * @enum {string}
+     */
+    AttemptStatus: "running" | "succeeded" | "failed" | "rejected";
+    /**
+     * ContentType
+     * @enum {string}
+     */
+    ContentType:
+      | "article"
+      | "image"
+      | "post"
+      | "music"
+      | "experimental"
+      | "other";
     /** CreatePressingRequest */
     CreatePressingRequest: {
       /** Personalnote */
       personalNote: string;
       /** Selectedfragment */
       selectedFragment: string;
+      /** Sourcedomain */
+      sourceDomain?: string | null;
+      /** Sourcetitle */
+      sourceTitle?: string | null;
       sourceType: components["schemas"]["SourceType"];
       /** Sourceuploadid */
       sourceUploadId?: string | null;
       /** Sourceurl */
       sourceUrl?: string | null;
     };
+    /** DeletePressingResponse */
+    DeletePressingResponse: {
+      /** Pressingid */
+      pressingId: string;
+      status: components["schemas"]["PressingStatus"];
+      /** Tombstonekey */
+      tombstoneKey: string;
+    };
+    /**
+     * Density
+     * @enum {string}
+     */
+    Density: "quiet" | "balanced" | "dense";
+    /** ErrorDetail */
+    ErrorDetail: {
+      code: components["schemas"]["FailureCategory"];
+      /** Message */
+      message: string;
+      /** Requestid */
+      requestId?: string | null;
+      /** Retryable */
+      retryable: boolean;
+    };
+    /** ErrorResponse */
+    ErrorResponse: {
+      detail: components["schemas"]["ErrorDetail"];
+    };
     /**
      * FailureCategory
      * @enum {string}
      */
     FailureCategory:
+      | "invalid_input"
       | "invalid_source"
       | "source_preparation_failed"
       | "provider_authentication_failed"
+      | "provider_authorization_failed"
       | "provider_rate_limited"
       | "provider_timed_out"
       | "model_output_malformed"
       | "asset_validation_failed"
+      | "storage_authentication_failed"
+      | "storage_authorization_failed"
+      | "storage_bucket_missing"
+      | "storage_object_missing"
+      | "storage_timed_out"
+      | "storage_rate_limited"
+      | "storage_invalid_key"
+      | "storage_upload_failed"
+      | "storage_download_failed"
+      | "storage_partial_finalization_failed"
       | "storage_failed"
+      | "retry_limit_reached"
+      | "conflict"
       | "unknown_internal_error";
+    /** FailureRecord */
+    FailureRecord: {
+      category: components["schemas"]["FailureCategory"];
+      /** Message */
+      message: string;
+      /**
+       * Occurredat
+       * Format: date-time
+       */
+      occurredAt?: string;
+      /** Providercode */
+      providerCode?: string | null;
+      /** Retryable */
+      retryable: boolean;
+    };
+    /** FinalizedPressingRecord */
+    FinalizedPressingRecord: {
+      finalAsset: components["schemas"]["StoredAssetReference"];
+      /**
+       * Finalizedat
+       * Format: date-time
+       */
+      finalizedAt?: string;
+      /** Generationrunid */
+      generationRunId: string;
+      internalArchetype: components["schemas"]["InternalArchetype"];
+      /** Metadatakey */
+      metadataKey: string;
+      /** Parentrunid */
+      parentRunId?: string | null;
+      /** Provenancekey */
+      provenanceKey: string;
+    };
+    /** GenerationAttempt */
+    GenerationAttempt: {
+      asset?: components["schemas"]["StoredAssetReference"] | null;
+      /** Attemptnumber */
+      attemptNumber: number;
+      failure?: components["schemas"]["FailureRecord"] | null;
+      /** Genblazemanifest */
+      genblazeManifest?: {
+        [key: string]: unknown;
+      } | null;
+      /** Model */
+      model: string;
+      /** Parameters */
+      parameters: {
+        [key: string]: unknown;
+      };
+      /** Parentrunid */
+      parentRunId?: string | null;
+      /** Prompthash */
+      promptHash: string;
+      /** Provider */
+      provider: string;
+      /** Retryreason */
+      retryReason?: string | null;
+      /** Runid */
+      runId: string;
+      /** Stagetimestamps */
+      stageTimestamps: {
+        [key: string]: string;
+      };
+      status: components["schemas"]["AttemptStatus"];
+      validation?: components["schemas"]["ValidationResult"] | null;
+    };
+    /** GenerationUnderstanding */
+    GenerationUnderstanding: {
+      archetype: components["schemas"]["InternalArchetype"];
+      /** Atmosphere */
+      atmosphere: string[];
+      contentType: components["schemas"]["ContentType"];
+      density: components["schemas"]["Density"];
+      /** Generationbrief */
+      generationBrief: string;
+      /** Motif */
+      motif: string;
+      /** Palette */
+      palette: string[];
+    };
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -92,8 +286,12 @@ export interface components {
     };
     /** HealthResponse */
     HealthResponse: {
+      /** Durablestorageconfigured */
+      durableStorageConfigured: boolean;
       /** Environment */
       environment: string;
+      /** Liveproviderconfigured */
+      liveProviderConfigured: boolean;
       /**
        * Service
        * @constant
@@ -112,111 +310,70 @@ export interface components {
       /** Version */
       version: string;
     };
+    /** ImmutableAnchors */
+    ImmutableAnchors: {
+      /**
+       * Confirmedat
+       * Format: date-time
+       */
+      confirmedAt?: string;
+      /** Personalnote */
+      personalNote: string;
+      /** Selectedfragment */
+      selectedFragment: string;
+      /** Submittedsourceidentity */
+      submittedSourceIdentity: string;
+    };
     /**
      * InternalArchetype
      * @enum {string}
      */
     InternalArchetype: "scene" | "relic" | "signal";
-    /** NotImplementedDetail */
-    NotImplementedDetail: {
-      /**
-       * Arrivesin
-       * @constant
-       */
-      arrivesIn: "PR 2";
-      /**
-       * Code
-       * @constant
-       */
-      code: "generation_not_implemented";
-      /** Message */
-      message: string;
-    };
-    /** NotImplementedResponse */
-    NotImplementedResponse: {
-      detail: components["schemas"]["NotImplementedDetail"];
+    /** PressingAssetAccess */
+    PressingAssetAccess: {
+      /** Expiresinseconds */
+      expiresInSeconds: number;
+      /** Key */
+      key: string;
+      /** Url */
+      url: string;
     };
     /** PressingRecord */
     PressingRecord: {
-      /**
-       * Backasseturl
-       * @default null
-       */
-      backAssetUrl: string | null;
+      anchors: components["schemas"]["ImmutableAnchors"];
+      /** Attempts */
+      attempts?: components["schemas"]["GenerationAttempt"][];
       /**
        * Createdat
        * Format: date-time
        */
-      createdAt: string;
-      /** @default null */
-      failureCategory: components["schemas"]["FailureCategory"] | null;
-      /**
-       * Failuremessage
-       * @default null
-       */
-      failureMessage: string | null;
-      /**
-       * Frontasseturl
-       * @default null
-       */
-      frontAssetUrl: string | null;
-      /**
-       * Generationmodel
-       * @default null
-       */
-      generationModel: string | null;
-      /**
-       * Generationprovider
-       * @default null
-       */
-      generationProvider: string | null;
-      /**
-       * Generationrunid
-       * @default null
-       */
-      generationRunId: string | null;
+      createdAt?: string;
+      failure?: components["schemas"]["FailureRecord"] | null;
+      final?: components["schemas"]["FinalizedPressingRecord"] | null;
       /** Id */
       id: string;
-      /** @default null */
-      internalArchetype: components["schemas"]["InternalArchetype"] | null;
+      /** Idempotencykeyhash */
+      idempotencyKeyHash: string;
       /**
-       * Parentrunid
-       * @default null
+       * Progresseventcount
+       * @default 0
        */
-      parentRunId: string | null;
-      /** Personalnote */
-      personalNote: string;
-      /** Selectedfragment */
-      selectedFragment: string;
+      progressEventCount: number;
       /** Serialnumber */
       serialNumber: string;
-      /**
-       * Sourcedomain
-       * @default null
-       */
-      sourceDomain: string | null;
-      /**
-       * Sourcetitle
-       * @default null
-       */
-      sourceTitle: string | null;
-      sourceType: components["schemas"]["SourceType"];
-      /**
-       * Sourceurl
-       * @default null
-       */
-      sourceUrl: string | null;
+      source: components["schemas"]["SourceRecord"];
       status: components["schemas"]["PressingStatus"];
-      /**
-       * Thumbnailurl
-       * @default null
-       */
-      thumbnailUrl: string | null;
+      understanding?: components["schemas"]["GenerationUnderstanding"] | null;
       /**
        * Updatedat
        * Format: date-time
        */
-      updatedAt: string;
+      updatedAt?: string;
+    };
+    /** PressingResponse */
+    PressingResponse: {
+      finalAssetAccess?: components["schemas"]["PressingAssetAccess"] | null;
+      pressing: components["schemas"]["PressingRecord"];
     };
     /**
      * PressingStatus
@@ -229,13 +386,102 @@ export interface components {
       | "creating_world"
       | "rendering_pressing"
       | "saving_pressing"
+      | "retrying_generation"
+      | "ready"
+      | "failed"
+      | "deleted";
+    /** ProgressEvent */
+    ProgressEvent: {
+      /** Attemptnumber */
+      attemptNumber?: number | null;
+      /** Message */
+      message: string;
+      /** Parentrunid */
+      parentRunId?: string | null;
+      pressingStatus: components["schemas"]["PressingStatus"];
+      /** Runid */
+      runId?: string | null;
+      /** Sequence */
+      sequence: number;
+      stage: components["schemas"]["ProgressStage"];
+      /**
+       * Timestamp
+       * Format: date-time
+       */
+      timestamp?: string;
+    };
+    /** ProgressResponse */
+    ProgressResponse: {
+      /** Events */
+      events: components["schemas"]["ProgressEvent"][];
+      /** Pressingid */
+      pressingId: string;
+      /** Terminal */
+      terminal: boolean;
+    };
+    /**
+     * ProgressStage
+     * @enum {string}
+     */
+    ProgressStage:
+      | "preparing_source"
+      | "understanding_fragment"
+      | "creating_miniature_world"
+      | "rendering_pressing"
+      | "saving_pressing"
+      | "retrying_generation"
       | "ready"
       | "failed";
+    /** RetryRequest */
+    RetryRequest: {
+      /** Reason */
+      reason?: string | null;
+    };
+    /** SourceRecord */
+    SourceRecord: {
+      /** Canonicalurl */
+      canonicalUrl?: string | null;
+      /**
+       * Capturedat
+       * Format: date-time
+       */
+      capturedAt?: string;
+      /** Contenttype */
+      contentType?: string | null;
+      /** Domain */
+      domain?: string | null;
+      /** Snapshotkey */
+      snapshotKey?: string | null;
+      sourceType: components["schemas"]["SourceType"];
+      /** Sourceuploadid */
+      sourceUploadId?: string | null;
+      /** Submittedsourceidentity */
+      submittedSourceIdentity: string;
+      /** Submittedurl */
+      submittedUrl?: string | null;
+      /** Title */
+      title?: string | null;
+    };
     /**
      * SourceType
      * @enum {string}
      */
     SourceType: "url" | "screenshot" | "fixture";
+    /** StoredAssetReference */
+    StoredAssetReference: {
+      /** Height */
+      height?: number | null;
+      /** Key */
+      key: string;
+      /** Mimetype */
+      mimeType: string;
+      /** Sha256 */
+      sha256: string;
+      /** Sizebytes */
+      sizeBytes: number;
+      /** Width */
+      width?: number | null;
+    };
     /** ValidationError */
     ValidationError: {
       /** Context */
@@ -249,12 +495,46 @@ export interface components {
       /** Error Type */
       type: string;
     };
+    /** ValidationResult */
+    ValidationResult: {
+      /** Checks */
+      checks: {
+        [key: string]: boolean;
+      };
+      /** Errors */
+      errors?: string[];
+      /** Height */
+      height?: number | null;
+      /** Mimetype */
+      mimeType?: string | null;
+      /** Retrievedsha256 */
+      retrievedSha256?: string | null;
+      /** Sha256 */
+      sha256?: string | null;
+      /** Sizebytes */
+      sizeBytes?: number | null;
+      /** Valid */
+      valid: boolean;
+      /**
+       * Validatedat
+       * Format: date-time
+       */
+      validatedAt?: string;
+      /** Width */
+      width?: number | null;
+    };
     /** VersionResponse */
     VersionResponse: {
       /** Buildtimestamp */
       buildTimestamp?: string | null;
       /** Commitsha */
       commitSha?: string | null;
+      /**
+       * Sponsorbackbone
+       * @default pr-2
+       * @constant
+       */
+      sponsorBackbone: "pr-2";
       /** Version */
       version: string;
     };
@@ -287,10 +567,32 @@ export interface operations {
       };
     };
   };
-  create_pressing_v1_pressings_post: {
+  list_pressings_v1_pressings_get: {
     parameters: {
       query?: never;
       header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PressingResponse"][];
+        };
+      };
+    };
+  };
+  create_pressing_v1_pressings_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        "Idempotency-Key"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -300,13 +602,31 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Successful Response */
+      /** @description OK */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["NotImplementedResponse"];
+          "application/json": components["schemas"]["PressingResponse"];
+        };
+      };
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PressingResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
         };
       };
       /** @description Validation Error */
@@ -318,13 +638,179 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Not Implemented */
-      501: {
+    };
+  };
+  get_pressing_v1_pressings__pressing_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pressing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["NotImplementedResponse"];
+          "application/json": components["schemas"]["PressingResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_pressing_v1_pressings__pressing_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pressing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeletePressingResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pressing_events_v1_pressings__pressing_id__events_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pressing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProgressResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  retry_pressing_v1_pressings__pressing_id__retry_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        "Idempotency-Key"?: string | null;
+      };
+      path: {
+        pressing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RetryRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PressingResponse"];
+        };
+      };
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PressingResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

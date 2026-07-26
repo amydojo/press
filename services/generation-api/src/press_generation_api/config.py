@@ -44,9 +44,7 @@ class Settings(BaseSettings):
     B2_READ_TIMEOUT_SECONDS: float = Field(default=300.0, gt=0, le=900)
     B2_SDK_MAX_ATTEMPTS: int = Field(default=3, ge=1, le=5)
     MAX_SOURCE_BYTES: int = Field(default=10 * 1024 * 1024, ge=1024, le=50 * 1024 * 1024)
-    MAX_GENERATED_ASSET_BYTES: int = Field(
-        default=25 * 1024 * 1024, ge=1024, le=50 * 1024 * 1024
-    )
+    MAX_GENERATED_ASSET_BYTES: int = Field(default=25 * 1024 * 1024, ge=1024, le=50 * 1024 * 1024)
     MIN_IMAGE_EDGE: int = Field(default=512, ge=64, le=2048)
     MAX_IMAGE_EDGE: int = Field(default=4096, ge=512, le=8192)
 

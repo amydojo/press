@@ -61,9 +61,7 @@ def _reconstruct(pressing_id: str) -> dict[str, Any]:
             "serialNumber": record.serial_number,
             "fragmentSha256": _sha(record.anchors.selected_fragment),
             "noteSha256": _sha(record.anchors.personal_note),
-            "submittedSourceIdentitySha256": _sha(
-                record.anchors.submitted_source_identity
-            ),
+            "submittedSourceIdentitySha256": _sha(record.anchors.submitted_source_identity),
             "attemptCount": len(record.attempts),
             "finalAssetExists": final_exists,
             "generationRunId": record.final.generation_run_id if record.final else None,
@@ -133,9 +131,7 @@ def _run(output: Path) -> dict[str, Any]:
                     if attempt.validation
                     else None
                 ),
-                "failureCategory": (
-                    attempt.failure.category.value if attempt.failure else None
-                ),
+                "failureCategory": (attempt.failure.category.value if attempt.failure else None),
                 "retryReason": attempt.retry_reason,
             }
             for attempt in final.attempts
@@ -183,9 +179,7 @@ def _run(output: Path) -> dict[str, Any]:
         "exactAnchors": {
             "fragmentSha256": _sha(final.anchors.selected_fragment),
             "noteSha256": _sha(final.anchors.personal_note),
-            "submittedSourceIdentitySha256": _sha(
-                final.anchors.submitted_source_identity
-            ),
+            "submittedSourceIdentitySha256": _sha(final.anchors.submitted_source_identity),
             "preserved": True,
         },
         "orderedProgressTrace": [

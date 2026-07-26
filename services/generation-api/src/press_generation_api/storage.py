@@ -92,7 +92,9 @@ class InMemoryObjectStore:
     def _maybe_fail(self, operation: str) -> None:
         if self.fail_next_operation == operation:
             self.fail_next_operation = None
-            raise map_storage_exception(RuntimeError(f"forced {operation} failure"), operation=operation)
+            raise map_storage_exception(
+                RuntimeError(f"forced {operation} failure"), operation=operation
+            )
 
     def put_bytes(
         self,
@@ -160,9 +162,7 @@ class GenblazeB2ObjectStore:
         try:
             from genblaze_s3 import S3StorageBackend  # type: ignore[import-not-found]
         except ImportError as exc:  # pragma: no cover - exercised by live environment
-            raise RuntimeError(
-                "genblaze-s3 is required for live Backblaze B2 persistence"
-            ) from exc
+            raise RuntimeError("genblaze-s3 is required for live Backblaze B2 persistence") from exc
         key_id = settings.B2_KEY_ID
         app_key = settings.B2_APPLICATION_KEY
         assert key_id is not None and app_key is not None

@@ -44,7 +44,9 @@ class RetryLimitReachedError(PressError):
 
 class LiveConfigurationError(PressError):
     def __init__(self, message: str) -> None:
-        super().__init__(FailureCategory.INVALID_INPUT, message, HTTPStatus.SERVICE_UNAVAILABLE, False)
+        super().__init__(
+            FailureCategory.INVALID_INPUT, message, HTTPStatus.SERVICE_UNAVAILABLE, False
+        )
 
 
 class StorageOperationError(PressError):
@@ -62,7 +64,9 @@ def map_storage_exception(exc: Exception, *, operation: str) -> StorageOperation
             HTTPStatus.BAD_REQUEST,
             False,
         )
-    if any(token in combined for token in ("invalidaccesskeyid", "signaturedoesnotmatch", "credential")):
+    if any(
+        token in combined for token in ("invalidaccesskeyid", "signaturedoesnotmatch", "credential")
+    ):
         return StorageOperationError(
             FailureCategory.STORAGE_AUTHENTICATION_FAILED,
             "Backblaze B2 credentials were rejected",

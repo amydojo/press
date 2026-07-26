@@ -140,7 +140,9 @@ class PressingRepository:
         self, request: CreatePressingRequest, *, idempotency_key: str | None = None
     ) -> tuple[PressingRecord, bool]:
         fingerprint = self._request_fingerprint(request)
-        resolved_key = idempotency_key.strip() if idempotency_key and idempotency_key.strip() else fingerprint
+        resolved_key = (
+            idempotency_key.strip() if idempotency_key and idempotency_key.strip() else fingerprint
+        )
         key_hash = self._hash(resolved_key)
         idempotency_object = f"idempotency/create/{key_hash}.json"
         with self._lock:
@@ -302,9 +304,7 @@ class PressingRepository:
     ) -> PressingRecord:
         with self._lock:
             record = self.get_by_id(pressing_id)
-            manifest_key = self._key(
-                pressing_id, f"generations/{attempt.run_id}/manifest.json"
-            )
+            manifest_key = self._key(pressing_id, f"generations/{attempt.run_id}/manifest.json")
             if self._store.head(manifest_key) is not None:
                 existing = GenerationAttempt.model_validate(
                     parse_json(self._store.get_bytes(manifest_key))["attempt"]
@@ -312,14 +312,14 @@ class PressingRepository:
                 if existing != attempt:
                     raise PressingConflictError("A generation run cannot be overwritten")
                 return record
-            evaluation_key = self._key(
-                pressing_id, f"generations/{attempt.run_id}/evaluation.json"
-            )
+            evaluation_key = self._key(pressing_id, f"generations/{attempt.run_id}/evaluation.json")
             if attempt.validation is not None:
                 self._put_model(evaluation_key, attempt.validation)
             self._store.put_bytes(
                 manifest_key,
-                json_bytes({"attempt": attempt.model_dump(by_alias=True, mode="json"), **manifest_payload}),
+                json_bytes(
+                    {"attempt": attempt.model_dump(by_alias=True, mode="json"), **manifest_payload}
+                ),
                 content_type="application/json",
             )
             attempts = [*record.attempts, attempt]
@@ -404,8 +404,12 @@ class PressingRepository:
                 "createdAt": record.created_at,
                 "assetKeys": {"internalWorld": final_key},
             }
-            self._store.put_bytes(metadata_key, json_bytes(metadata), content_type="application/json")
-            self._put_model(provenance_key, provenance.model_copy(update={"final_asset_key": final_key}))
+            self._store.put_bytes(
+                metadata_key, json_bytes(metadata), content_type="application/json"
+            )
+            self._put_model(
+                provenance_key, provenance.model_copy(update={"final_asset_key": final_key})
+            )
             next_record = record.model_copy(
                 update={
                     "status": PressingStatus.READY,

@@ -5,7 +5,11 @@ from dataclasses import dataclass, field
 import pytest
 
 from press_generation_api.config import Settings
-from press_generation_api.domain.models import GenerationUnderstanding, ImmutableAnchors, SourceRecord
+from press_generation_api.domain.models import (
+    GenerationUnderstanding,
+    ImmutableAnchors,
+    SourceRecord,
+)
 from press_generation_api.media import create_fixture_png
 from press_generation_api.providers import (
     GenerationProvider,

@@ -143,7 +143,11 @@ def test_primary_failures_use_configured_fallback_model(
 ) -> None:
     provider = ScriptedProvider(
         understanding=understanding,
-        generate_outcomes=[provider_failure_timeout, provider_failure_timeout, create_fixture_png()],
+        generate_outcomes=[
+            provider_failure_timeout,
+            provider_failure_timeout,
+            create_fixture_png(),
+        ],
     )
     repository, pressing_id = run_pipeline(settings, provider)
     record = repository.get_by_id(pressing_id)

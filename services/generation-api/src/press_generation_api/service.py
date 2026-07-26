@@ -76,9 +76,10 @@ class PressingService:
         idempotency_key: str | None,
         background_tasks: BackgroundTasks,
     ) -> tuple[PressingResponse, bool]:
-        resolved = idempotency_key or hashlib.sha256(
-            f"{pressing_id}:{request.reason or ''}".encode("utf-8")
-        ).hexdigest()
+        resolved = (
+            idempotency_key
+            or hashlib.sha256(f"{pressing_id}:{request.reason or ''}".encode("utf-8")).hexdigest()
+        )
         record, created = self.repository.begin_retry(pressing_id, idempotency_key=resolved)
         if created:
             background_tasks.add_task(self.pipeline.run, pressing_id)

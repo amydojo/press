@@ -258,8 +258,12 @@ class PressingPipeline:
                     source_key=self._repository.object_key(pressing_id, "source/source.json"),
                     fragment_key=self._repository.object_key(pressing_id, "source/fragment.json"),
                     note_key=self._repository.object_key(pressing_id, "source/note.json"),
-                    final_asset_key=self._repository.object_key(pressing_id, "final/internal-world.png"),
-                    final_metadata_key=self._repository.object_key(pressing_id, "final/metadata.json"),
+                    final_asset_key=self._repository.object_key(
+                        pressing_id, "final/internal-world.png"
+                    ),
+                    final_metadata_key=self._repository.object_key(
+                        pressing_id, "final/metadata.json"
+                    ),
                     generation_run_id=run_id,
                     parent_run_id=parent_run_id,
                     provider=attempt.provider,
@@ -291,7 +295,9 @@ class PressingPipeline:
                 return self._repository.get_by_id(final.id)
             except Exception as exc:  # noqa: BLE001
                 failure = self._failure_from_exception(exc)
-                prompt_hash = hashlib.sha256(brief.encode("utf-8")).hexdigest() if brief else base_hash
+                prompt_hash = (
+                    hashlib.sha256(brief.encode("utf-8")).hexdigest() if brief else base_hash
+                )
                 attempt = GenerationAttempt(
                     run_id=run_id,
                     parent_run_id=parent_run_id,

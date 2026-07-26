@@ -1,6 +1,16 @@
 {
   "components": {
     "schemas": {
+      "AttemptStatus": {
+        "enum": ["running", "succeeded", "failed", "rejected"],
+        "title": "AttemptStatus",
+        "type": "string"
+      },
+      "ContentType": {
+        "enum": ["article", "image", "post", "music", "experimental", "other"],
+        "title": "ContentType",
+        "type": "string"
+      },
       "CreatePressingRequest": {
         "additionalProperties": false,
         "properties": {
@@ -14,6 +24,30 @@
             "minLength": 1,
             "title": "Selectedfragment",
             "type": "string"
+          },
+          "sourceDomain": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcedomain"
+          },
+          "sourceTitle": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcetitle"
           },
           "sourceType": {
             "$ref": "#/components/schemas/SourceType"
@@ -45,20 +79,358 @@
         "title": "CreatePressingRequest",
         "type": "object"
       },
+      "DeletePressingResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "pressingId": {
+            "title": "Pressingid",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PressingStatus"
+          },
+          "tombstoneKey": {
+            "title": "Tombstonekey",
+            "type": "string"
+          }
+        },
+        "required": ["pressingId", "status", "tombstoneKey"],
+        "title": "DeletePressingResponse",
+        "type": "object"
+      },
+      "Density": {
+        "enum": ["quiet", "balanced", "dense"],
+        "title": "Density",
+        "type": "string"
+      },
+      "ErrorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/FailureCategory"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "requestId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestid"
+          },
+          "retryable": {
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": ["code", "message", "retryable"],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": ["detail"],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
       "FailureCategory": {
         "enum": [
+          "invalid_input",
           "invalid_source",
           "source_preparation_failed",
           "provider_authentication_failed",
+          "provider_authorization_failed",
           "provider_rate_limited",
           "provider_timed_out",
           "model_output_malformed",
           "asset_validation_failed",
+          "storage_authentication_failed",
+          "storage_authorization_failed",
+          "storage_bucket_missing",
+          "storage_object_missing",
+          "storage_timed_out",
+          "storage_rate_limited",
+          "storage_invalid_key",
+          "storage_upload_failed",
+          "storage_download_failed",
+          "storage_partial_finalization_failed",
           "storage_failed",
+          "retry_limit_reached",
+          "conflict",
           "unknown_internal_error"
         ],
         "title": "FailureCategory",
         "type": "string"
+      },
+      "FailureRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/FailureCategory"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "occurredAt": {
+            "format": "date-time",
+            "title": "Occurredat",
+            "type": "string"
+          },
+          "providerCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Providercode"
+          },
+          "retryable": {
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": ["category", "message", "retryable"],
+        "title": "FailureRecord",
+        "type": "object"
+      },
+      "FinalizedPressingRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "finalAsset": {
+            "$ref": "#/components/schemas/StoredAssetReference"
+          },
+          "finalizedAt": {
+            "format": "date-time",
+            "title": "Finalizedat",
+            "type": "string"
+          },
+          "generationRunId": {
+            "title": "Generationrunid",
+            "type": "string"
+          },
+          "internalArchetype": {
+            "$ref": "#/components/schemas/InternalArchetype"
+          },
+          "metadataKey": {
+            "title": "Metadatakey",
+            "type": "string"
+          },
+          "parentRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentrunid"
+          },
+          "provenanceKey": {
+            "title": "Provenancekey",
+            "type": "string"
+          }
+        },
+        "required": [
+          "internalArchetype",
+          "generationRunId",
+          "finalAsset",
+          "metadataKey",
+          "provenanceKey"
+        ],
+        "title": "FinalizedPressingRecord",
+        "type": "object"
+      },
+      "GenerationAttempt": {
+        "additionalProperties": false,
+        "properties": {
+          "asset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StoredAssetReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attemptNumber": {
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Attemptnumber",
+            "type": "integer"
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FailureRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "genblazeManifest": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genblazemanifest"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "parentRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentrunid"
+          },
+          "promptHash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Prompthash",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "retryReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retryreason"
+          },
+          "runId": {
+            "title": "Runid",
+            "type": "string"
+          },
+          "stageTimestamps": {
+            "additionalProperties": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "title": "Stagetimestamps",
+            "type": "object"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AttemptStatus"
+          },
+          "validation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValidationResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "runId",
+          "attemptNumber",
+          "provider",
+          "model",
+          "status",
+          "promptHash",
+          "parameters",
+          "stageTimestamps"
+        ],
+        "title": "GenerationAttempt",
+        "type": "object"
+      },
+      "GenerationUnderstanding": {
+        "additionalProperties": false,
+        "properties": {
+          "archetype": {
+            "$ref": "#/components/schemas/InternalArchetype"
+          },
+          "atmosphere": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Atmosphere",
+            "type": "array"
+          },
+          "contentType": {
+            "$ref": "#/components/schemas/ContentType"
+          },
+          "density": {
+            "$ref": "#/components/schemas/Density"
+          },
+          "generationBrief": {
+            "maxLength": 4000,
+            "minLength": 20,
+            "title": "Generationbrief",
+            "type": "string"
+          },
+          "motif": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Motif",
+            "type": "string"
+          },
+          "palette": {
+            "items": {
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Palette",
+            "type": "array"
+          }
+        },
+        "required": [
+          "contentType",
+          "motif",
+          "palette",
+          "atmosphere",
+          "density",
+          "archetype",
+          "generationBrief"
+        ],
+        "title": "GenerationUnderstanding",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -76,9 +448,17 @@
       "HealthResponse": {
         "additionalProperties": false,
         "properties": {
+          "durableStorageConfigured": {
+            "title": "Durablestorageconfigured",
+            "type": "boolean"
+          },
           "environment": {
             "title": "Environment",
             "type": "string"
+          },
+          "liveProviderConfigured": {
+            "title": "Liveproviderconfigured",
+            "type": "boolean"
           },
           "service": {
             "const": "press-generation-api",
@@ -105,9 +485,43 @@
           "service",
           "version",
           "environment",
-          "timestamp"
+          "timestamp",
+          "liveProviderConfigured",
+          "durableStorageConfigured"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "ImmutableAnchors": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmedAt": {
+            "format": "date-time",
+            "title": "Confirmedat",
+            "type": "string"
+          },
+          "personalNote": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Personalnote",
+            "type": "string"
+          },
+          "selectedFragment": {
+            "minLength": 1,
+            "title": "Selectedfragment",
+            "type": "string"
+          },
+          "submittedSourceIdentity": {
+            "title": "Submittedsourceidentity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "selectedFragment",
+          "personalNote",
+          "submittedSourceIdentity"
+        ],
+        "title": "ImmutableAnchors",
         "type": "object"
       },
       "InternalArchetype": {
@@ -115,222 +529,96 @@
         "title": "InternalArchetype",
         "type": "string"
       },
-      "NotImplementedDetail": {
+      "PressingAssetAccess": {
         "additionalProperties": false,
         "properties": {
-          "arrivesIn": {
-            "const": "PR 2",
-            "title": "Arrivesin",
+          "expiresInSeconds": {
+            "title": "Expiresinseconds",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
             "type": "string"
           },
-          "code": {
-            "const": "generation_not_implemented",
-            "title": "Code",
-            "type": "string"
-          },
-          "message": {
-            "title": "Message",
+          "url": {
+            "title": "Url",
             "type": "string"
           }
         },
-        "required": ["code", "message", "arrivesIn"],
-        "title": "NotImplementedDetail",
-        "type": "object"
-      },
-      "NotImplementedResponse": {
-        "additionalProperties": false,
-        "properties": {
-          "detail": {
-            "$ref": "#/components/schemas/NotImplementedDetail"
-          }
-        },
-        "required": ["detail"],
-        "title": "NotImplementedResponse",
+        "required": ["key", "url", "expiresInSeconds"],
+        "title": "PressingAssetAccess",
         "type": "object"
       },
       "PressingRecord": {
         "additionalProperties": false,
         "properties": {
-          "backAssetUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Backasseturl"
+          "anchors": {
+            "$ref": "#/components/schemas/ImmutableAnchors"
+          },
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/GenerationAttempt"
+            },
+            "title": "Attempts",
+            "type": "array"
           },
           "createdAt": {
             "format": "date-time",
             "title": "Createdat",
             "type": "string"
           },
-          "failureCategory": {
+          "failure": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/FailureCategory"
+                "$ref": "#/components/schemas/FailureRecord"
               },
               {
                 "type": "null"
               }
-            ],
-            "default": null
+            ]
           },
-          "failureMessage": {
+          "final": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/FinalizedPressingRecord"
               },
               {
                 "type": "null"
               }
-            ],
-            "default": null,
-            "title": "Failuremessage"
-          },
-          "frontAssetUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Frontasseturl"
-          },
-          "generationModel": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Generationmodel"
-          },
-          "generationProvider": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Generationprovider"
-          },
-          "generationRunId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Generationrunid"
+            ]
           },
           "id": {
             "title": "Id",
             "type": "string"
           },
-          "internalArchetype": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/InternalArchetype"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null
-          },
-          "parentRunId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Parentrunid"
-          },
-          "personalNote": {
-            "title": "Personalnote",
+          "idempotencyKeyHash": {
+            "title": "Idempotencykeyhash",
             "type": "string"
           },
-          "selectedFragment": {
-            "title": "Selectedfragment",
-            "type": "string"
+          "progressEventCount": {
+            "default": 0,
+            "title": "Progresseventcount",
+            "type": "integer"
           },
           "serialNumber": {
             "title": "Serialnumber",
             "type": "string"
           },
-          "sourceDomain": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Sourcedomain"
-          },
-          "sourceTitle": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Sourcetitle"
-          },
-          "sourceType": {
-            "$ref": "#/components/schemas/SourceType"
-          },
-          "sourceUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Sourceurl"
+          "source": {
+            "$ref": "#/components/schemas/SourceRecord"
           },
           "status": {
             "$ref": "#/components/schemas/PressingStatus"
           },
-          "thumbnailUrl": {
+          "understanding": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/GenerationUnderstanding"
               },
               {
                 "type": "null"
               }
-            ],
-            "default": null,
-            "title": "Thumbnailurl"
+            ]
           },
           "updatedAt": {
             "format": "date-time",
@@ -342,13 +630,32 @@
           "id",
           "serialNumber",
           "status",
-          "sourceType",
-          "selectedFragment",
-          "personalNote",
-          "createdAt",
-          "updatedAt"
+          "source",
+          "anchors",
+          "idempotencyKeyHash"
         ],
         "title": "PressingRecord",
+        "type": "object"
+      },
+      "PressingResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "finalAssetAccess": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PressingAssetAccess"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pressing": {
+            "$ref": "#/components/schemas/PressingRecord"
+          }
+        },
+        "required": ["pressing"],
+        "title": "PressingResponse",
         "type": "object"
       },
       "PressingStatus": {
@@ -359,16 +666,282 @@
           "creating_world",
           "rendering_pressing",
           "saving_pressing",
+          "retrying_generation",
           "ready",
-          "failed"
+          "failed",
+          "deleted"
         ],
         "title": "PressingStatus",
         "type": "string"
+      },
+      "ProgressEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "attemptNumber": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attemptnumber"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "parentRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentrunid"
+          },
+          "pressingStatus": {
+            "$ref": "#/components/schemas/PressingStatus"
+          },
+          "runId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runid"
+          },
+          "sequence": {
+            "minimum": 1.0,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/ProgressStage"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": ["sequence", "stage", "message", "pressingStatus"],
+        "title": "ProgressEvent",
+        "type": "object"
+      },
+      "ProgressResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "pressingId": {
+            "title": "Pressingid",
+            "type": "string"
+          },
+          "terminal": {
+            "title": "Terminal",
+            "type": "boolean"
+          }
+        },
+        "required": ["pressingId", "events", "terminal"],
+        "title": "ProgressResponse",
+        "type": "object"
+      },
+      "ProgressStage": {
+        "enum": [
+          "preparing_source",
+          "understanding_fragment",
+          "creating_miniature_world",
+          "rendering_pressing",
+          "saving_pressing",
+          "retrying_generation",
+          "ready",
+          "failed"
+        ],
+        "title": "ProgressStage",
+        "type": "string"
+      },
+      "RetryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "RetryRequest",
+        "type": "object"
+      },
+      "SourceRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "canonicalUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonicalurl"
+          },
+          "capturedAt": {
+            "format": "date-time",
+            "title": "Capturedat",
+            "type": "string"
+          },
+          "contentType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contenttype"
+          },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
+          "snapshotKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshotkey"
+          },
+          "sourceType": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "sourceUploadId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceuploadid"
+          },
+          "submittedSourceIdentity": {
+            "title": "Submittedsourceidentity",
+            "type": "string"
+          },
+          "submittedUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submittedurl"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": ["sourceType", "submittedSourceIdentity"],
+        "title": "SourceRecord",
+        "type": "object"
       },
       "SourceType": {
         "enum": ["url", "screenshot", "fixture"],
         "title": "SourceType",
         "type": "string"
+      },
+      "StoredAssetReference": {
+        "additionalProperties": false,
+        "properties": {
+          "height": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "mimeType": {
+            "title": "Mimetype",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "sizeBytes": {
+            "minimum": 1.0,
+            "title": "Sizebytes",
+            "type": "integer"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": ["key", "mimeType", "sizeBytes", "sha256"],
+        "title": "StoredAssetReference",
+        "type": "object"
       },
       "ValidationError": {
         "properties": {
@@ -406,6 +979,103 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "ValidationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "checks": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Checks",
+            "type": "object"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "mimeType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mimetype"
+          },
+          "retrievedSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrievedsha256"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "sizeBytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sizebytes"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          },
+          "validatedAt": {
+            "format": "date-time",
+            "title": "Validatedat",
+            "type": "string"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": ["valid", "checks"],
+        "title": "ValidationResult",
+        "type": "object"
+      },
       "VersionResponse": {
         "additionalProperties": false,
         "properties": {
@@ -431,6 +1101,12 @@
             ],
             "title": "Commitsha"
           },
+          "sponsorBackbone": {
+            "const": "pr-2",
+            "default": "pr-2",
+            "title": "Sponsorbackbone",
+            "type": "string"
+          },
           "version": {
             "title": "Version",
             "type": "string"
@@ -443,9 +1119,11 @@
     }
   },
   "info": {
-    "description": "Typed service foundation for PRESS. Genblaze generation and Backblaze B2 persistence are explicitly deferred to PR 2.",
+    "description": "PR 2 sponsor backbone for PRESS: validated Genblaze orchestration, bounded recovery, private Backblaze B2 persistence, durable reconstruction, and honest progress.",
     "title": "PRESS Generation API",
-    "version": "0.1.0"
+    "version": "0.2.0",
+    "x-press-contract": "pydantic-first",
+    "x-press-roadmap-pr": "PR 2"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -469,8 +1147,47 @@
       }
     },
     "/v1/pressings": {
+      "get": {
+        "operationId": "list_pressings_v1_pressings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PressingResponse"
+                  },
+                  "title": "Response List Pressings V1 Pressings Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Pressings",
+        "tags": ["pressings"]
+      },
       "post": {
         "operationId": "create_pressing_v1_pressings_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -486,11 +1203,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotImplementedResponse"
+                  "$ref": "#/components/schemas/PressingResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PressingResponse"
                 }
               }
             },
             "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "422": {
             "content": {
@@ -501,19 +1238,243 @@
               }
             },
             "description": "Validation Error"
-          },
-          "501": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotImplementedResponse"
-                }
-              }
-            },
-            "description": "Not Implemented"
           }
         },
         "summary": "Create Pressing",
+        "tags": ["pressings"]
+      }
+    },
+    "/v1/pressings/{pressing_id}": {
+      "delete": {
+        "operationId": "delete_pressing_v1_pressings__pressing_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pressing_id",
+            "required": true,
+            "schema": {
+              "title": "Pressing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletePressingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Pressing",
+        "tags": ["pressings"]
+      },
+      "get": {
+        "operationId": "get_pressing_v1_pressings__pressing_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pressing_id",
+            "required": true,
+            "schema": {
+              "title": "Pressing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PressingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Pressing",
+        "tags": ["pressings"]
+      }
+    },
+    "/v1/pressings/{pressing_id}/events": {
+      "get": {
+        "operationId": "get_pressing_events_v1_pressings__pressing_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pressing_id",
+            "required": true,
+            "schema": {
+              "title": "Pressing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Pressing Events",
+        "tags": ["pressings"]
+      }
+    },
+    "/v1/pressings/{pressing_id}/retry": {
+      "post": {
+        "operationId": "retry_pressing_v1_pressings__pressing_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pressing_id",
+            "required": true,
+            "schema": {
+              "title": "Pressing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PressingResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PressingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Pressing",
         "tags": ["pressings"]
       }
     },

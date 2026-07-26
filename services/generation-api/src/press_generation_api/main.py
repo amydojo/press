@@ -8,7 +8,12 @@ from uuid import uuid4
 from fastapi import BackgroundTasks, FastAPI, Header, Request, Response
 from fastapi.responses import JSONResponse
 
-from press_generation_api.api.models import ErrorDetail, ErrorResponse, HealthResponse, VersionResponse
+from press_generation_api.api.models import (
+    ErrorDetail,
+    ErrorResponse,
+    HealthResponse,
+    VersionResponse,
+)
 from press_generation_api.config import Settings, get_settings
 from press_generation_api.domain.models import (
     CreatePressingRequest,

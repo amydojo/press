@@ -126,7 +126,9 @@ class _FakeBackend:
 
     def list(self, *, prefix: str, continuation_token: str | None) -> _FakePage:
         del continuation_token
-        return _FakePage([_FakeEntry(key) for key in sorted(self.objects) if key.startswith(prefix)])
+        return _FakePage(
+            [_FakeEntry(key) for key in sorted(self.objects) if key.startswith(prefix)]
+        )
 
     def delete_many(self, keys: list[str]) -> object:
         for key in keys:
