@@ -78,7 +78,7 @@ class PressingService:
     ) -> tuple[PressingResponse, bool]:
         resolved = (
             idempotency_key
-            or hashlib.sha256(f"{pressing_id}:{request.reason or ''}".encode("utf-8")).hexdigest()
+            or hashlib.sha256(f"{pressing_id}:{request.reason or ''}".encode()).hexdigest()
         )
         record, created = self.repository.begin_retry(pressing_id, idempotency_key=resolved)
         if created:
