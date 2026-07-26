@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import pytest
+from fastapi.testclient import TestClient
 
 from press_generation_api.config import Settings
 from press_generation_api.domain.models import (
@@ -13,7 +14,7 @@ from press_generation_api.domain.models import (
 from press_generation_api.media import create_fixture_png
 from press_generation_api.providers import (
     GenerationProvider,
-    ProviderFailure,
+    ProviderError,
     ProviderGenerationResult,
 )
 
@@ -90,10 +91,10 @@ def scripted_provider(understanding: GenerationUnderstanding) -> ScriptedProvide
 
 
 @pytest.fixture
-def provider_failure_timeout() -> ProviderFailure:
+def provider_failure_timeout() -> ProviderError:
     from press_generation_api.domain.models import FailureCategory
 
-    return ProviderFailure(
+    return ProviderError(
         FailureCategory.PROVIDER_TIMED_OUT,
         "provider timed out",
         True,
@@ -102,9 +103,7 @@ def provider_failure_timeout() -> ProviderFailure:
 
 
 @pytest.fixture
-def client() -> "TestClient":
-    from fastapi.testclient import TestClient
-
+def client() -> TestClient:
     from press_generation_api.main import create_app
 
     return TestClient(create_app(Settings(PRESS_ENV="test", FIXTURE_MODE=True)))
