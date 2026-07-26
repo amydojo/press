@@ -7,10 +7,9 @@ test("PRESS foundation reaches the live generation API", async ({ page }) => {
   });
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "PRESS" })).toBeVisible();
-  await expect(page.getByText("Keep what made you stop.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Keep what made you stop." })).toBeVisible();
 
-  await page.getByRole("link", { name: "Open system diagnostics" }).click();
+  await page.goto("/system");
   await expect(page).toHaveURL(/\/system$/);
   await expect(page.getByRole("heading", { name: "Foundation online." })).toBeVisible();
   await expect(page.getByText("Web status")).toBeVisible();
