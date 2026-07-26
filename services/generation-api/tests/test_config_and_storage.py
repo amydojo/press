@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import types
 from dataclasses import dataclass
+from typing import ClassVar
 
 import pytest
 
@@ -96,7 +97,7 @@ class _FakeMeta:
 
 
 class _FakeBackend:
-    instances: list["_FakeBackend"] = []
+    instances: ClassVar[list[_FakeBackend]] = []
 
     def __init__(self, **kwargs: object) -> None:
         self.kwargs = kwargs
