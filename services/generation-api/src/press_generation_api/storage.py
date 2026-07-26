@@ -197,7 +197,7 @@ class GenblazeB2ObjectStore:
                     metadata=dict(metadata or {}),
                 )
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             if isinstance(exc, StorageOperationError):
                 raise
             raise map_storage_exception(exc, operation="put") from exc
@@ -206,7 +206,7 @@ class GenblazeB2ObjectStore:
         try:
             validate_object_key(key)
             return bytes(self._backend.get(key))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise map_storage_exception(exc, operation="get") from exc
 
     def head(self, key: str) -> ObjectHead | None:
@@ -220,7 +220,7 @@ class GenblazeB2ObjectStore:
             metadata = dict(getattr(value, "metadata", {}) or {})
             etag = getattr(value, "etag", None)
             return ObjectHead(key, size, content_type, metadata, etag)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise map_storage_exception(exc, operation="head") from exc
 
     def list_keys(self, prefix: str) -> list[str]:
@@ -231,11 +231,11 @@ class GenblazeB2ObjectStore:
             token: str | None = None
             while True:
                 page = self._backend.list(prefix=prefix, continuation_token=token)
-                keys.extend(str(getattr(entry, "key")) for entry in page.entries)
+                keys.extend(str(entry.key) for entry in page.entries)
                 token = page.next_token
                 if token is None:
                     return sorted(keys)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise map_storage_exception(exc, operation="list") from exc
 
     def delete_keys(self, keys: list[str]) -> None:
@@ -248,14 +248,14 @@ class GenblazeB2ObjectStore:
             errors = list(getattr(result, "errors", []) or [])
             if errors:
                 raise RuntimeError(f"partial delete failure for {len(errors)} objects")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise map_storage_exception(exc, operation="delete") from exc
 
     def presign_get(self, key: str, *, expires_in: int) -> str:
         try:
             validate_object_key(key)
             return str(self._backend.get_url(key, expires_in=expires_in))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise map_storage_exception(exc, operation="presign") from exc
 
     def close(self) -> None:
