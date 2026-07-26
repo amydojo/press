@@ -37,21 +37,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint:web
       - name: Run web typecheck
-        id: web-typecheck
+        id: web_typecheck
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           pnpm typecheck:web 2>&1 | tee web-typecheck.log
       - name: Run web tests
-        id: web-tests
+        id: web_tests
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           pnpm test:web 2>&1 | tee web-test.log
       - name: Build web with secret sentinels
-        id: web-build
+        id: web_build
         continue-on-error: true
         env:
           B2_KEY_ID: press-ci-b2-key-id-sentinel
@@ -59,7 +59,7 @@ jobs:
           GENBLAZE_PROVIDER_API_KEY: press-ci-provider-secret-sentinel
         run: pnpm build
       - name: Inspect client bundle for server only credentials
-        id: web-secret-inspection
+        id: web_secret_inspection
         continue-on-error: true
         run: pnpm security:client-bundle
       - name: Upload web diagnostics
@@ -75,10 +75,10 @@ jobs:
         if: always()
         shell: bash
         run: |
-          test "${{ steps.web-typecheck.outcome }}" = "success"
-          test "${{ steps.web-tests.outcome }}" = "success"
-          test "${{ steps.web-build.outcome }}" = "success"
-          test "${{ steps.web-secret-inspection.outcome }}" = "success"
+          test "${{ steps.web_typecheck.outcome }}" = "success"
+          test "${{ steps.web_tests.outcome }}" = "success"
+          test "${{ steps.web_build.outcome }}" = "success"
+          test "${{ steps.web_secret_inspection.outcome }}" = "success"
 
   api-checks:
     name: API checks
@@ -94,28 +94,28 @@ jobs:
           enable-cache: true
       - run: uv sync --project services/generation-api --frozen
       - name: Check Python formatting
-        id: api-format
+        id: api_format
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           uv run --project services/generation-api ruff format --check services/generation-api 2>&1 | tee ruff-format.log
       - name: Run Python lint
-        id: api-lint
+        id: api_lint
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           uv run --project services/generation-api ruff check services/generation-api 2>&1 | tee ruff-check.log
       - name: Run Python static type checking
-        id: api-mypy
+        id: api_mypy
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           uv run --project services/generation-api mypy services/generation-api/src services/generation-api/scripts 2>&1 | tee mypy.log
       - name: Run API tests
-        id: api-tests
+        id: api_tests
         continue-on-error: true
         shell: bash
         run: |
@@ -136,10 +136,10 @@ jobs:
         if: always()
         shell: bash
         run: |
-          test "${{ steps.api-format.outcome }}" = "success"
-          test "${{ steps.api-lint.outcome }}" = "success"
-          test "${{ steps.api-mypy.outcome }}" = "success"
-          test "${{ steps.api-tests.outcome }}" = "success"
+          test "${{ steps.api_format.outcome }}" = "success"
+          test "${{ steps.api_lint.outcome }}" = "success"
+          test "${{ steps.api_mypy.outcome }}" = "success"
+          test "${{ steps.api_tests.outcome }}" = "success"
 
   contract-check:
     name: Contract drift
