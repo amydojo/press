@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 
@@ -78,7 +79,7 @@ export function PressingObject({
             <div className="pressing-object__rear" aria-hidden="true" />
             <div className="pressing-object__edge" aria-hidden="true" />
             <div className="pressing-object__world" aria-hidden="true">
-              {assetUrl ? <img src={assetUrl} alt="" /> : <div className="pressing-object__fallback"><span /><span /><span /></div>}
+              {assetUrl ? <Image src={assetUrl} alt="" fill sizes={compact ? "50vw" : "34rem"} unoptimized /> : <div className="pressing-object__fallback"><span /><span /><span /></div>}
             </div>
             <div className="pressing-object__depth pressing-object__depth--one" aria-hidden="true" />
             <div className="pressing-object__depth pressing-object__depth--two" aria-hidden="true" />
