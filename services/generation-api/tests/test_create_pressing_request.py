@@ -45,10 +45,8 @@ def test_url_source_requires_http_or_https_url() -> None:
     request = parse(sourceType="url", sourceUrl="https://example.com/path")
     assert request.source_type is SourceType.URL
     assert request.source_url == "https://example.com/path"
-
     with pytest.raises(ValidationError):
         parse(sourceType="url")
-
     with pytest.raises(ValidationError):
         parse(sourceType="url", sourceUrl="file:///tmp/source.html")
 
@@ -56,7 +54,6 @@ def test_url_source_requires_http_or_https_url() -> None:
 def test_screenshot_source_requires_upload_identifier() -> None:
     request = parse(sourceType="screenshot", sourceUploadId="upload_future_123")
     assert request.source_upload_id == "upload_future_123"
-
     with pytest.raises(ValidationError):
         parse(sourceType="screenshot")
 
@@ -65,10 +62,8 @@ def test_fixture_source_rejects_external_identifiers() -> None:
     request = parse(sourceType="fixture")
     assert request.source_url is None
     assert request.source_upload_id is None
-
     with pytest.raises(ValidationError):
         parse(sourceType="fixture", sourceUrl="https://example.com")
-
     with pytest.raises(ValidationError):
         parse(sourceType="fixture", sourceUploadId="not-allowed")
 
@@ -76,6 +71,5 @@ def test_fixture_source_rejects_external_identifiers() -> None:
 def test_source_types_reject_mixed_identifiers() -> None:
     with pytest.raises(ValidationError):
         parse(sourceType="url", sourceUrl="https://example.com", sourceUploadId="mixed")
-
     with pytest.raises(ValidationError):
         parse(sourceType="screenshot", sourceUploadId="upload", sourceUrl="https://example.com")

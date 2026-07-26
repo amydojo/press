@@ -1,6 +1,6 @@
 {
   "name": "press",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "packageManager": "pnpm@10.14.0",
   "engines": {
@@ -24,7 +24,8 @@
     "e2e": "pnpm --filter @press/web e2e",
     "contracts:generate": "uv run --project services/generation-api python services/generation-api/scripts/export_openapi.py && pnpm exec openapi-typescript services/generation-api/openapi.json -o packages/contracts/src/generated/api.ts && pnpm exec prettier --write services/generation-api/openapi.json packages/contracts/src/generated/api.ts",
     "contracts:check": "pnpm contracts:generate && git diff --exit-code -- services/generation-api/openapi.json packages/contracts/src/generated/api.ts",
-    "security:client-bundle": "node scripts/check-client-secrets.mjs apps/web/.next/static"
+    "security:client-bundle": "node scripts/check-client-secrets.mjs apps/web/.next/static",
+    "verify:live-sponsors": "uv run --project services/generation-api --no-sync python services/generation-api/scripts/verify_live_sponsor_backbone.py"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",

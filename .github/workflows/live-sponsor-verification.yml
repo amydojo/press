@@ -1,0 +1,63 @@
+name: Live sponsor verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: press-live-sponsor-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Genblaze plus private B2 end to end
+    runs-on: ubuntu-latest
+    environment: press-live
+    timeout-minutes: 20
+    env:
+      PRESS_ENV: production
+      PRESS_VERSION: 0.2.0
+      GIT_COMMIT_SHA: ${{ github.sha }}
+      FIXTURE_MODE: "false"
+      LIVE_INTEGRATION_TEST: "true"
+      LIVE_FORCE_RETRY_ONCE: "true"
+      GENBLAZE_PROVIDER: openai
+      GENBLAZE_PROVIDER_API_KEY: ${{ secrets.GENBLAZE_PROVIDER_API_KEY }}
+      GENBLAZE_UNDERSTANDING_MODEL: ${{ vars.GENBLAZE_UNDERSTANDING_MODEL || 'gpt-4.1-mini' }}
+      GENBLAZE_PRIMARY_MODEL: ${{ vars.GENBLAZE_PRIMARY_MODEL || 'gpt-image-1' }}
+      GENBLAZE_FALLBACK_MODEL: ${{ vars.GENBLAZE_FALLBACK_MODEL || 'gpt-image-1-mini' }}
+      B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      B2_BUCKET_NAME: ${{ secrets.B2_BUCKET_NAME }}
+      B2_ENDPOINT: ${{ secrets.B2_ENDPOINT }}
+      B2_REGION: ${{ secrets.B2_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.10.0
+          enable-cache: true
+      - run: uv sync --project services/generation-api --frozen
+      - name: Install exact live sponsor packages
+        run: >-
+          uv pip install
+          --python services/generation-api/.venv/bin/python
+          --requirement services/generation-api/requirements-live.txt
+      - name: Run live generation, B2 persistence, retry, and restart reconstruction
+        run: >-
+          uv run --project services/generation-api --no-sync
+          python services/generation-api/scripts/verify_live_sponsor_backbone.py
+          --output docs/evidence/pr-2-sponsor-backbone/live-report.json
+      - name: Upload sanitized live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: press-pr2-live-sponsor-evidence-${{ github.sha }}
+          path: docs/evidence/pr-2-sponsor-backbone/live-report.json
+          if-no-files-found: warn
+          retention-days: 30

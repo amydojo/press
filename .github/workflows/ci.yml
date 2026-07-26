@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feat/foundation-contracts]
+    branches: [feat/foundation-contracts, feat/genblaze-b2]
 
 permissions:
   contents: read
@@ -16,7 +16,8 @@ concurrency:
 env:
   CI: true
   PRESS_ENV: test
-  PRESS_VERSION: 0.1.0
+  PRESS_VERSION: 0.2.0
+  FIXTURE_MODE: true
   API_BASE_URL: http://127.0.0.1:8000
   NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
 
@@ -50,10 +51,11 @@ jobs:
           if-no-files-found: error
       - name: Build web with secret sentinels
         env:
+          B2_KEY_ID: press-ci-b2-key-id-sentinel
           B2_APPLICATION_KEY: press-ci-b2-secret-sentinel
           GENBLAZE_PROVIDER_API_KEY: press-ci-provider-secret-sentinel
         run: pnpm build
-      - name: Inspect client bundle for server-only credentials
+      - name: Inspect client bundle for server only credentials
         run: pnpm security:client-bundle
 
   api-checks:
@@ -72,7 +74,18 @@ jobs:
       - run: uv run --project services/generation-api ruff format --check services/generation-api
       - run: uv run --project services/generation-api ruff check services/generation-api
       - run: uv run --project services/generation-api mypy services/generation-api/src services/generation-api/scripts
-      - run: uv run --project services/generation-api pytest services/generation-api/tests
+      - name: Run API tests
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run --project services/generation-api pytest services/generation-api/tests 2>&1 | tee api-test.log
+      - name: Upload API test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: press-api-test-diagnostics
+          path: api-test.log
+          if-no-files-found: error
 
   contract-check:
     name: Contract drift
@@ -99,6 +112,15 @@ jobs:
       - run: uv sync --project services/generation-api --frozen
       - run: pnpm contracts:check
       - run: pnpm --filter @press/contracts typecheck
+      - name: Upload generated contracts for drift diagnosis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: press-generated-contracts
+          path: |
+            services/generation-api/openapi.json
+            packages/contracts/src/generated/api.ts
+          if-no-files-found: error
 
   e2e-smoke:
     name: E2E smoke
