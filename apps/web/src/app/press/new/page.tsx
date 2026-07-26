@@ -15,11 +15,12 @@ const DEMO = {
 };
 
 type Draft = typeof DEMO;
+type CaptureSourceType = "url" | "screenshot";
 
 export default function NewPressingPage() {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft>({ sourceUrl: "", sourceDomain: "", sourceTitle: "", selectedFragment: "", personalNote: "" });
-  const [sourceType, setSourceType] = useState<"url" | "upload">("url");
+  const [sourceType, setSourceType] = useState<CaptureSourceType>("url");
   const [uploadId, setUploadId] = useState("");
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -34,7 +35,7 @@ export default function NewPressingPage() {
   }, [draft]);
 
   const urlValid = useMemo(() => {
-    if (sourceType === "upload") return Boolean(uploadId);
+    if (sourceType === "screenshot") return Boolean(uploadId);
     try {
       const parsed = new URL(draft.sourceUrl);
       return parsed.protocol === "http:" || parsed.protocol === "https:";
@@ -59,7 +60,7 @@ export default function NewPressingPage() {
       const response = await createPressing({
         sourceType,
         sourceUrl,
-        sourceUploadId: sourceType === "upload" ? uploadId : null,
+        sourceUploadId: sourceType === "screenshot" ? uploadId : null,
         sourceDomain,
         sourceTitle: draft.sourceTitle || null,
         selectedFragment: draft.selectedFragment,
@@ -83,7 +84,7 @@ export default function NewPressingPage() {
           <label htmlFor="source-url">Paste something you found</label>
           <input id="source-url" type="url" value={draft.sourceUrl} onChange={(e) => { setSourceType("url"); patch("sourceUrl", e.target.value); }} placeholder="https://" aria-describedby="source-help" />
           <p id="source-help" className="helper">Public http or https links only. PRESS never bypasses access controls.</p>
-          <div className="capture-actions"><button type="button" className="quiet-button" onClick={() => { setDraft(DEMO); setSourceType("url"); setStatus("Demo source loaded. This is a fixture, not a live fetch."); }}>Use demo source</button><label className="quiet-button upload-button">Upload screenshot<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; if (!['image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 8_000_000) { setStatus("Use a PNG, JPEG, or WEBP smaller than 8 MB."); return; } setSourceType("upload"); setUploadId(`local:${file.name}:${file.size}`); setStatus("Screenshot selected. Production upload is delegated to the generation service."); }} /></label></div>
+          <div className="capture-actions"><button type="button" className="quiet-button" onClick={() => { setDraft(DEMO); setSourceType("url"); setStatus("Demo source loaded. This is a fixture, not a live fetch."); }}>Use demo source</button><label className="quiet-button upload-button">Upload screenshot<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; if (!["image/png","image/jpeg","image/webp"].includes(file.type) || file.size > 8_000_000) { setStatus("Use a PNG, JPEG, or WEBP smaller than 8 MB."); return; } setSourceType("screenshot"); setUploadId(`local:${file.name}:${file.size}`); setStatus("Screenshot selected. Production upload is delegated to the generation service."); }} /></label></div>
         </section>
         <section className="capture-section" aria-labelledby="fragment-heading">
           <div><span className="step-number">02</span><h2 id="fragment-heading">What part do you want to keep?</h2></div>
