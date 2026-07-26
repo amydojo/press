@@ -215,6 +215,8 @@ class PressingPipeline:
                         "The durable asset round-trip failed validation",
                         True,
                     )
+                assert validation.mime_type is not None
+                assert validation.sha256 is not None
                 asset = StoredAssetReference(
                     key=asset_key,
                     mime_type=validation.mime_type,
