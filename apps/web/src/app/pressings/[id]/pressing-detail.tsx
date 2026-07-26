@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PressingObject } from "@/components/pressing-object";
@@ -9,9 +9,15 @@ import { deletePressing, type PressingResponse } from "@/lib/pressings";
 export function PressingDetail({ response }: { response: PressingResponse }) {
   const router = useRouter();
   const [back, setBack] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const pressing = response.pressing;
   const sourceUrl = pressing.source.canonicalUrl ?? pressing.source.submittedUrl;
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setRevealed(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   async function remove() {
     const domain = pressing.source.domain ?? pressing.anchors.submittedSourceIdentity;
@@ -28,13 +34,23 @@ export function PressingDetail({ response }: { response: PressingResponse }) {
   }
 
   return (
-    <div className="detail-layout">
-      <section className="detail-object">
-        <PressingObject pressing={pressing} assetUrl={response.finalAssetAccess?.url} back={back} />
+    <div className={`detail-layout ${revealed ? "detail-layout--revealed" : ""}`}>
+      <section className="detail-object" aria-labelledby="object-title">
+        <div className="reveal-chamber" aria-hidden="true"><span /><span /></div>
+        <h2 id="object-title" className="sr-only">Inspect pressing</h2>
+        <PressingObject
+          pressing={pressing}
+          assetUrl={response.finalAssetAccess?.url}
+          back={back}
+          interactive
+          revealed={revealed}
+          onSideChange={setBack}
+        />
         <div className="segmented-control" aria-label="Pressing side">
-          <button type="button" aria-pressed={!back} onClick={() => setBack(false)}>Front</button>
-          <button type="button" aria-pressed={back} onClick={() => setBack(true)}>Back</button>
+          <button type="button" aria-pressed={!back} onClick={() => setBack(false)}>View front</button>
+          <button type="button" aria-pressed={back} onClick={() => setBack(true)}>View back</button>
         </div>
+        <p className="inspection-hint">Move across the object to inspect its depth. Double click to flip.</p>
       </section>
       <section className="detail-copy">
         <p className="eyebrow">{pressing.serialNumber}</p>
@@ -48,6 +64,7 @@ export function PressingDetail({ response }: { response: PressingResponse }) {
         </dl>
         <div className="detail-actions">
           {sourceUrl ? <a className="primary-button" href={sourceUrl} target="_blank" rel="noopener noreferrer">View source ↗</a> : null}
+          <a className="secondary-button" href="/press/new">Make another</a>
           <button className="danger-button" type="button" onClick={remove} disabled={deleting}>{deleting ? "Deleting…" : "Delete pressing"}</button>
         </div>
         <details><summary>Generation details</summary><p>Provider and model provenance remain secondary to the object. Attempts: {pressing.attempts?.length ?? 0}.</p></details>
