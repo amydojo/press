@@ -17,7 +17,7 @@ from press_generation_api.domain.models import (
 
 
 @dataclass(frozen=True, slots=True)
-class ProviderFailure(Exception):
+class ProviderError(Exception):
     category: FailureCategory
     message: str
     retryable: bool
@@ -58,39 +58,39 @@ class GenerationProvider(Protocol):
     ) -> ProviderGenerationResult: ...
 
 
-def _map_provider_exception(exc: Exception) -> ProviderFailure:
+def _map_provider_exception(exc: Exception) -> ProviderError:
     text = str(exc).lower()
     code = str(getattr(exc, "error_code", "")) or None
     combined = f"{type(exc).__name__.lower()} {text} {code or ''}"
     if any(token in combined for token in ("authentication", "invalid_api_key", "401")):
-        return ProviderFailure(
+        return ProviderError(
             FailureCategory.PROVIDER_AUTHENTICATION_FAILED,
             "The generation provider rejected its credentials",
             False,
             code,
         )
     if any(token in combined for token in ("permission", "authorization", "403")):
-        return ProviderFailure(
+        return ProviderError(
             FailureCategory.PROVIDER_AUTHORIZATION_FAILED,
             "The generation provider denied this operation",
             False,
             code,
         )
     if any(token in combined for token in ("rate", "429", "throttl")):
-        return ProviderFailure(
+        return ProviderError(
             FailureCategory.PROVIDER_RATE_LIMITED,
             "The generation provider is rate limited",
             True,
             code,
         )
     if any(token in combined for token in ("timeout", "timed out")):
-        return ProviderFailure(
+        return ProviderError(
             FailureCategory.PROVIDER_TIMED_OUT,
             "The generation provider timed out",
             True,
             code,
         )
-    return ProviderFailure(
+    return ProviderError(
         FailureCategory.UNKNOWN_INTERNAL_ERROR,
         "The generation provider failed",
         True,
@@ -157,19 +157,19 @@ class GenblazeOpenAIProvider:
             text = str(getattr(response, "text", response))
             return GenerationUnderstanding.model_validate_json(text)
         except (json.JSONDecodeError, ValueError) as exc:
-            raise ProviderFailure(
+            raise ProviderError(
                 FailureCategory.MODEL_OUTPUT_MALFORMED,
                 "Structured source understanding was malformed",
                 True,
             ) from exc
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise _map_provider_exception(exc) from exc
 
     @staticmethod
     def _asset_bytes(asset_url: str) -> bytes:
         parsed = urlparse(asset_url)
         if parsed.scheme != "file":
-            raise ProviderFailure(
+            raise ProviderError(
                 FailureCategory.ASSET_VALIDATION_FAILED,
                 "Genblaze did not materialize a durable local image asset",
                 True,
@@ -214,7 +214,7 @@ class GenblazeOpenAIProvider:
                     run, manifest = result
                 step = run.steps[0]
                 if not step.assets:
-                    raise ProviderFailure(
+                    raise ProviderError(
                         FailureCategory.ASSET_VALIDATION_FAILED,
                         "Genblaze returned no image asset",
                         True,
@@ -238,9 +238,9 @@ class GenblazeOpenAIProvider:
                     manifest=manifest_payload,
                     parameters=parameters,
                 )
-        except ProviderFailure:
+        except ProviderError:
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise _map_provider_exception(exc) from exc
 
 
