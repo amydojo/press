@@ -6,7 +6,7 @@ from http import HTTPStatus
 from press_generation_api.domain.models import FailureCategory
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass
 class PressError(Exception):
     category: FailureCategory
     public_message: str
