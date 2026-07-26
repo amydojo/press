@@ -205,7 +205,10 @@ def _run(output: Path) -> dict[str, Any]:
         "presignedUrlsPersisted": False,
         "liveCompletionGatePassed": True,
         "knownLimitations": [
-            "In-flight execution remains process-bound; only completed-record restart reconstruction is claimed.",
+            (
+                "In-flight execution remains process-bound; only completed-record "
+                "restart reconstruction is claimed."
+            ),
             "Distributed multi-writer serial allocation is deferred beyond the hackathon MVP.",
             "The final collectible shell and archive UI are intentionally PR 3 scope.",
         ],
