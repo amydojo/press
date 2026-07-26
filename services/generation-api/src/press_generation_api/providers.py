@@ -9,9 +9,12 @@ from urllib.parse import unquote, urlparse
 
 from press_generation_api.config import Settings
 from press_generation_api.domain.models import (
+    ContentType,
+    Density,
     FailureCategory,
     GenerationUnderstanding,
     ImmutableAnchors,
+    InternalArchetype,
     SourceRecord,
 )
 
@@ -257,12 +260,12 @@ class FixtureGenerationProvider:
     ) -> GenerationUnderstanding:
         del source, anchors
         return GenerationUnderstanding(
-            content_type="article",
+            content_type=ContentType.ARTICLE,
             motif="a small paper fragment held between translucent geological layers",
             palette=["#EDE7DC", "#62706A", "#C1735C"],
             atmosphere=["quiet", "archival", "tactile"],
-            density="balanced",
-            archetype="relic",
+            density=Density.BALANCED,
+            archetype=InternalArchetype.RELIC,
             generation_brief=(
                 "A restrained miniature relic that feels pressed from an internet encounter, "
                 "with one clear object and no visible lettering."
