@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { PressingObject } from "./pressing-object";
 
@@ -27,16 +27,24 @@ const pressing = {
 } as const;
 
 describe("PressingObject", () => {
-  it("renders exact front anchors without relying on generated text", () => {
-    render(<PressingObject pressing={pressing} />);
+  it("renders exact authoritative anchors on both faces", () => {
+    render(<PressingObject pressing={pressing} back />);
     expect(screen.getByText("Design is paced through rhythm.")).toBeInTheDocument();
-    expect(screen.getByText("P-0027")).toBeInTheDocument();
-    expect(screen.getByText("example.com")).toBeInTheDocument();
+    expect(screen.getByText("The pacing feels like music.")).toBeInTheDocument();
+    expect(screen.getAllByText("P-0027").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Back of P-0027 from example.com")).toBeInTheDocument();
   });
 
-  it("renders exact back metadata when generated media is missing", () => {
-    render(<PressingObject pressing={pressing} back />);
-    expect(screen.getByText("The pacing feels like music.")).toBeInTheDocument();
-    expect(screen.getByText("Pressed from the internet")).toBeInTheDocument();
+  it("offers an explicit side-change callback in addition to pointer inspection", () => {
+    const onSideChange = vi.fn();
+    render(<PressingObject pressing={pressing} interactive onSideChange={onSideChange} />);
+    fireEvent.doubleClick(screen.getByLabelText("Front of P-0027 from example.com"));
+    expect(onSideChange).toHaveBeenCalledWith(true);
+  });
+
+  it("renders a deliberate internal fallback rather than a broken media element", () => {
+    const { container } = render(<PressingObject pressing={pressing} />);
+    expect(container.querySelector(".pressing-object__fallback")).toBeInTheDocument();
+    expect(container.querySelector("img")).not.toBeInTheDocument();
   });
 });
