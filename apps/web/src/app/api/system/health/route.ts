@@ -7,6 +7,8 @@ import { fetchGenerationHealth } from "@/server/api/health";
 
 export const dynamic = "force-dynamic";
 
+const commitSha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "local";
+
 export async function GET(): Promise<NextResponse<SystemDiagnostics>> {
   const requestId = crypto.randomUUID();
   const webEnvironment = getServerEnvironment();
@@ -14,6 +16,7 @@ export async function GET(): Promise<NextResponse<SystemDiagnostics>> {
   try {
     const health = await fetchGenerationHealth(requestId);
     return NextResponse.json({
+      commitSha,
       webStatus: "ok",
       apiStatus: "healthy",
       apiVersion: health.version,
@@ -26,6 +29,7 @@ export async function GET(): Promise<NextResponse<SystemDiagnostics>> {
     if (error instanceof PressApiError && error.kind === "malformed_response") {
       return NextResponse.json(
         {
+          commitSha,
           webStatus: "ok",
           apiStatus: "malformed",
           reason: "malformed_response",
@@ -40,6 +44,7 @@ export async function GET(): Promise<NextResponse<SystemDiagnostics>> {
       : "network_error";
     return NextResponse.json(
       {
+        commitSha,
         webStatus: "ok",
         apiStatus: "unreachable",
         reason,
