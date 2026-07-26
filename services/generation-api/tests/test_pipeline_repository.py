@@ -4,6 +4,7 @@ from threading import Thread
 
 import pytest
 
+from conftest import ScriptedProvider
 from press_generation_api.config import Settings
 from press_generation_api.domain.models import (
     CreatePressingRequest,
@@ -15,11 +16,9 @@ from press_generation_api.domain.models import (
 from press_generation_api.errors import PressingConflictError, PressingNotFoundError
 from press_generation_api.media import create_fixture_png
 from press_generation_api.pipeline import PressingPipeline, validate_image_bytes
-from press_generation_api.providers import ProviderFailure
+from press_generation_api.providers import ProviderError
 from press_generation_api.repository import PressingRepository
 from press_generation_api.storage import InMemoryObjectStore
-
-from conftest import ScriptedProvider
 
 
 def request() -> CreatePressingRequest:
@@ -81,7 +80,7 @@ def test_process_restart_reconstructs_same_pressing(
 def test_provider_timeout_then_success_preserves_parent_lineage(
     settings: Settings,
     understanding: GenerationUnderstanding,
-    provider_failure_timeout: ProviderFailure,
+    provider_failure_timeout: ProviderError,
 ) -> None:
     provider = ScriptedProvider(
         understanding=understanding,
@@ -102,7 +101,7 @@ def test_provider_timeout_then_success_preserves_parent_lineage(
 def test_malformed_understanding_then_corrected_retry(
     settings: Settings, understanding: GenerationUnderstanding
 ) -> None:
-    malformed = ProviderFailure(
+    malformed = ProviderError(
         FailureCategory.MODEL_OUTPUT_MALFORMED,
         "malformed structured output",
         True,
@@ -139,7 +138,7 @@ def test_invalid_asset_then_corrected_retry(
 def test_primary_failures_use_configured_fallback_model(
     settings: Settings,
     understanding: GenerationUnderstanding,
-    provider_failure_timeout: ProviderFailure,
+    provider_failure_timeout: ProviderError,
 ) -> None:
     provider = ScriptedProvider(
         understanding=understanding,
@@ -163,7 +162,7 @@ def test_primary_failures_use_configured_fallback_model(
 def test_retry_limit_reached_is_terminal(
     settings: Settings,
     understanding: GenerationUnderstanding,
-    provider_failure_timeout: ProviderFailure,
+    provider_failure_timeout: ProviderError,
 ) -> None:
     provider = ScriptedProvider(
         understanding=understanding,
