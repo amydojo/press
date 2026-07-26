@@ -2,6 +2,10 @@ name: Live sponsor verification
 
 on:
   workflow_dispatch:
+  push:
+    branches: [feat/genblaze-b2]
+    paths:
+      - .github/workflows/live-sponsor-verification.yml
 
 permissions:
   contents: read
