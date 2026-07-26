@@ -12,6 +12,8 @@ const healthResponseSchema = z.object({
   version: z.string().min(1),
   environment: z.string().min(1),
   timestamp: z.iso.datetime({ offset: true }),
+  liveProviderConfigured: z.boolean(),
+  durableStorageConfigured: z.boolean(),
 });
 
 export async function fetchGenerationHealth(requestId: string): Promise<HealthResponse> {
