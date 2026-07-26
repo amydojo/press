@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Recovery } from "@/components/recovery";
@@ -13,14 +13,15 @@ const REDUCED_PHASE_MS = 500;
 export default function ProcessingPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const search = useSearchParams();
   const [pressing, setPressing] = useState<Pressing | null | undefined>(undefined);
   const [reduced, setReduced] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fixtureFailure = useRef(false);
   const failedOnce = useRef(false);
 
   useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    fixtureFailure.current = new URL(window.location.href).searchParams.get("fixtureFailure") === "1";
     setPressing(browserRepository().read(id));
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [id]);
@@ -35,7 +36,7 @@ export default function ProcessingPage() {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       try {
-        if (search.get("fixtureFailure") === "1" && !failedOnce.current) {
+        if (fixtureFailure.current && !failedOnce.current) {
           failedOnce.current = true;
           const failed = failPressing(pressing);
           browserRepository().save(failed);
@@ -45,8 +46,7 @@ export default function ProcessingPage() {
         const index = processingPhases.findIndex((phase) => phase.status === pressing.status);
         const next = index === processingPhases.length - 1 ? "ready" : processingPhases[index + 1]?.status;
         if (!next) throw new Error("Unknown processing state");
-        const updated = browserRepository().advance(id, next as PressingStatus);
-        setPressing(updated);
+        setPressing(browserRepository().advance(id, next as PressingStatus));
       } catch {
         try {
           const failed = failPressing(pressing);
@@ -58,7 +58,7 @@ export default function ProcessingPage() {
       }
     }, reduced ? REDUCED_PHASE_MS : PHASE_MS);
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [id, pressing, reduced, router, search]);
+  }, [id, pressing, reduced, router]);
 
   const phaseIndex = useMemo(() => processingPhases.findIndex((phase) => phase.status === pressing?.status), [pressing]);
   const phase = phaseIndex >= 0 ? processingPhases[phaseIndex] : null;
