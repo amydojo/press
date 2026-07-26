@@ -18,10 +18,10 @@ def create_fixture_png(width: int = 1024, height: int = 1024) -> bytes:
     for y in range(height):
         rows.append(0)
         for x in range(width):
-            if 180 < x < 844 and 220 < y < 804:
-                color = (98, 112, 106)
-            elif (x - 512) ** 2 + (y - 512) ** 2 < 170**2:
+            if (x - 512) ** 2 + (y - 512) ** 2 < 170**2:
                 color = (193, 115, 92)
+            elif 180 < x < 844 and 220 < y < 804:
+                color = (98, 112, 106)
             else:
                 color = (237, 231, 220)
             rows.extend(color)
@@ -63,7 +63,9 @@ def _png_fallback(data: bytes) -> tuple[str, int, int, bool]:
     if width <= 0 or height <= 0 or not idat:
         raise ValueError("invalid PNG structure")
     decoded = zlib.decompress(bytes(idat))
-    sample = decoded[: min(len(decoded), 256 * 1024)]
+    sample_target = 256 * 1024
+    stride = max(1, len(decoded) // sample_target)
+    sample = decoded[::stride]
     non_blank = len(set(sample)) > 4
     return "image/png", width, height, non_blank
 
