@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 import { PressingObject } from "@/components/pressing-object";
-import { listPressings } from "@/lib/pressings";
+import { listPressings, type PressingResponse } from "@/lib/pressings";
 
 export const dynamic = "force-dynamic";
 
 export default async function PressingsPage() {
-  let items = [];
+  let items: PressingResponse[] = [];
   let error = "";
   try {
     items = await listPressings();
