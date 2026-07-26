@@ -38,21 +38,18 @@ jobs:
       - run: pnpm lint:web
       - name: Run web typecheck
         id: web_typecheck
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           pnpm typecheck:web 2>&1 | tee web-typecheck.log
       - name: Run web tests
         id: web_tests
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           pnpm test:web 2>&1 | tee web-test.log
       - name: Build web with secret sentinels
         id: web_build
-        continue-on-error: true
         env:
           B2_KEY_ID: press-ci-b2-key-id-sentinel
           B2_APPLICATION_KEY: press-ci-b2-secret-sentinel
@@ -60,7 +57,6 @@ jobs:
         run: pnpm build
       - name: Inspect client bundle for server only credentials
         id: web_secret_inspection
-        continue-on-error: true
         run: pnpm security:client-bundle
       - name: Upload web diagnostics
         if: always()
@@ -71,14 +67,6 @@ jobs:
             web-typecheck.log
             web-test.log
           if-no-files-found: warn
-      - name: Enforce web results
-        if: always()
-        shell: bash
-        run: |
-          test "${{ steps.web_typecheck.outcome }}" = "success"
-          test "${{ steps.web_tests.outcome }}" = "success"
-          test "${{ steps.web_build.outcome }}" = "success"
-          test "${{ steps.web_secret_inspection.outcome }}" = "success"
 
   api-checks:
     name: API checks
@@ -95,28 +83,24 @@ jobs:
       - run: uv sync --project services/generation-api --frozen
       - name: Check Python formatting
         id: api_format
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           uv run --project services/generation-api ruff format --check services/generation-api 2>&1 | tee ruff-format.log
       - name: Run Python lint
         id: api_lint
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           uv run --project services/generation-api ruff check services/generation-api 2>&1 | tee ruff-check.log
       - name: Run Python static type checking
         id: api_mypy
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           uv run --project services/generation-api mypy services/generation-api/src services/generation-api/scripts 2>&1 | tee mypy.log
       - name: Run API tests
         id: api_tests
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -132,14 +116,6 @@ jobs:
             mypy.log
             api-test.log
           if-no-files-found: warn
-      - name: Enforce API results
-        if: always()
-        shell: bash
-        run: |
-          test "${{ steps.api_format.outcome }}" = "success"
-          test "${{ steps.api_lint.outcome }}" = "success"
-          test "${{ steps.api_mypy.outcome }}" = "success"
-          test "${{ steps.api_tests.outcome }}" = "success"
 
   contract-check:
     name: Contract drift
