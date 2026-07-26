@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from contextlib import suppress
 from typing import Any
 from uuid import uuid4
 
@@ -21,7 +22,7 @@ from press_generation_api.domain.models import (
 )
 from press_generation_api.errors import PressError, StorageOperationError
 from press_generation_api.media import validate_image_bytes
-from press_generation_api.providers import GenerationProvider, ProviderFailure
+from press_generation_api.providers import GenerationProvider, ProviderError
 from press_generation_api.repository import PressingRepository
 
 
@@ -63,7 +64,7 @@ class PressingPipeline:
 
     @staticmethod
     def _failure_from_exception(exc: Exception) -> FailureRecord:
-        if isinstance(exc, ProviderFailure):
+        if isinstance(exc, ProviderError):
             return FailureRecord(
                 category=exc.category,
                 message=exc.message,
@@ -180,7 +181,7 @@ class PressingPipeline:
                     )
                     validation = local_validation
                 if not local_validation.valid:
-                    raise ProviderFailure(
+                    raise ProviderError(
                         FailureCategory.ASSET_VALIDATION_FAILED,
                         "; ".join(local_validation.errors),
                         True,
@@ -209,7 +210,7 @@ class PressingPipeline:
                     }
                 )
                 if not validation.valid:
-                    raise ProviderFailure(
+                    raise ProviderError(
                         FailureCategory.ASSET_VALIDATION_FAILED,
                         "The durable asset round-trip failed validation",
                         True,
@@ -293,7 +294,7 @@ class PressingPipeline:
                     attempt_number=attempt_number,
                 )
                 return self._repository.get_by_id(final.id)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 failure = self._failure_from_exception(exc)
                 prompt_hash = (
                     hashlib.sha256(brief.encode("utf-8")).hexdigest() if brief else base_hash
@@ -313,14 +314,12 @@ class PressingPipeline:
                     failure=failure,
                     genblaze_manifest=provider_manifest,
                 )
-                try:
+                with suppress(StorageOperationError):
                     self._repository.save_attempt(
                         pressing_id,
                         attempt,
                         manifest_payload={"failureCategory": failure.category.value},
                     )
-                except StorageOperationError:
-                    pass
                 if failure.retryable and attempt_number < self._settings.MAX_GENERATION_ATTEMPTS:
                     self._repository.append_progress_event(
                         pressing_id,
