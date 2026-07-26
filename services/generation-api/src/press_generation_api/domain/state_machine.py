@@ -51,7 +51,7 @@ ALLOWED_TRANSITIONS: dict[PressingStatus, frozenset[PressingStatus]] = {
 }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass
 class InvalidPressingTransitionError(ValueError):
     current: PressingStatus
     target: PressingStatus
