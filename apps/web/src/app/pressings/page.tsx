@@ -25,12 +25,15 @@ export default async function PressingsPage() {
       {error ? <section className="empty-state"><p>Your pressings could not be loaded.</p><p className="helper">{error}</p><Link className="text-link" href="/pressings">Try again</Link></section> : null}
       {!error && ready.length === 0 ? <section className="empty-state"><p>Nothing pressed yet.</p><p>Start with something worth keeping.</p><Link className="primary-link" href="/press/new">Create a pressing</Link></section> : null}
       <section className="archive-grid" aria-label="Saved pressings">
-        {ready.map(({ pressing, finalAssetAccess }) => (
-          <Link className="archive-item" href={`/pressings/${pressing.id}`} key={pressing.id} aria-label={`Open ${pressing.serialNumber} from ${pressing.source.domain ?? pressing.anchors.submittedSourceIdentity}`}>
-            <PressingObject pressing={pressing} assetUrl={finalAssetAccess?.url} compact />
-            <div className="archive-item__caption"><strong>{pressing.serialNumber}</strong><span>{pressing.source.domain ?? pressing.anchors.submittedSourceIdentity}</span><time>{new Date(pressing.createdAt ?? Date.now()).toLocaleDateString()}</time></div>
-          </Link>
-        ))}
+        {ready.map(({ pressing, finalAssetAccess }) => {
+          const createdAt = pressing.createdAt;
+          return (
+            <Link className="archive-item" href={`/pressings/${pressing.id}`} key={pressing.id} aria-label={`Open ${pressing.serialNumber} from ${pressing.source.domain ?? pressing.anchors.submittedSourceIdentity}`}>
+              <PressingObject pressing={pressing} assetUrl={finalAssetAccess?.url} compact />
+              <div className="archive-item__caption"><strong>{pressing.serialNumber}</strong><span>{pressing.source.domain ?? pressing.anchors.submittedSourceIdentity}</span><time>{createdAt ? new Date(createdAt).toLocaleDateString() : "Unknown"}</time></div>
+            </Link>
+          );
+        })}
       </section>
     </main>
   );
