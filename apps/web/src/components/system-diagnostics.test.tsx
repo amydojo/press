@@ -9,6 +9,7 @@ vi.mock("@/lib/system-client", () => ({
 }));
 
 const mockedLoad = vi.mocked(loadSystemDiagnostics);
+const commitSha = "test-commit-sha";
 
 describe("SystemDiagnostics", () => {
   beforeEach(() => {
@@ -30,6 +31,7 @@ describe("SystemDiagnostics", () => {
       contractVersion: "0.1.0",
       timestamp: "2026-07-24T12:00:00+00:00",
       requestId: "request-healthy",
+      commitSha,
     });
     render(<SystemDiagnostics />);
 
@@ -43,6 +45,7 @@ describe("SystemDiagnostics", () => {
       apiStatus: "unreachable",
       reason: "network_error",
       requestId: "request-unreachable",
+      commitSha,
     });
     render(<SystemDiagnostics />);
 
@@ -56,6 +59,7 @@ describe("SystemDiagnostics", () => {
       apiStatus: "malformed",
       reason: "malformed_response",
       requestId: "request-malformed",
+      commitSha,
     });
     render(<SystemDiagnostics />);
 
