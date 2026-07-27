@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -13,6 +14,7 @@ export function PressingDetail({ response }: { response: PressingResponse }) {
   const [deleting, setDeleting] = useState(false);
   const pressing = response.pressing;
   const sourceUrl = pressing.source.canonicalUrl ?? pressing.source.submittedUrl;
+  const capturedAt = pressing.source.capturedAt ?? pressing.createdAt;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setRevealed(true));
@@ -59,12 +61,12 @@ export function PressingDetail({ response }: { response: PressingResponse }) {
         <p className="personal-note">{pressing.anchors.personalNote}</p>
         <dl>
           <div><dt>Source</dt><dd>{pressing.source.domain ?? pressing.anchors.submittedSourceIdentity}</dd></div>
-          <div><dt>Captured</dt><dd>{new Date(pressing.source.capturedAt ?? pressing.createdAt ?? Date.now()).toLocaleString()}</dd></div>
+          <div><dt>Captured</dt><dd>{capturedAt ? new Date(capturedAt).toLocaleString() : "Unknown"}</dd></div>
           <div><dt>Archetype</dt><dd>{pressing.final?.internalArchetype ?? pressing.understanding?.archetype ?? "pending"}</dd></div>
         </dl>
         <div className="detail-actions">
           {sourceUrl ? <a className="primary-button" href={sourceUrl} target="_blank" rel="noopener noreferrer">View source ↗</a> : null}
-          <a className="secondary-button" href="/press/new">Make another</a>
+          <Link className="secondary-button" href="/press/new">Make another</Link>
           <button className="danger-button" type="button" onClick={remove} disabled={deleting}>{deleting ? "Deleting…" : "Delete pressing"}</button>
         </div>
         <details><summary>Generation details</summary><p>Provider and model provenance remain secondary to the object. Attempts: {pressing.attempts?.length ?? 0}.</p></details>
