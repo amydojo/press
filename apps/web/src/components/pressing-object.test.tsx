@@ -11,6 +11,7 @@ const pressing = {
   progressEventCount: 0,
   source: {
     sourceType: "url",
+    submittedSourceIdentity: "https://example.com/story",
     submittedUrl: "https://example.com/story",
     canonicalUrl: "https://example.com/story",
     domain: "example.com",
