@@ -32,7 +32,7 @@ const pressing: PressingRecord = {
 describe("PressingObject", () => {
   it("renders exact authoritative anchors on both faces", () => {
     render(<PressingObject pressing={pressing} back />);
-    expect(screen.getByText("Design is paced through rhythm.")).toBeInTheDocument();
+    expect(screen.getAllByText("Design is paced through rhythm.")).toHaveLength(2);
     expect(screen.getByText("The pacing feels like music.")).toBeInTheDocument();
     expect(screen.getAllByText("P-0027").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Back of P-0027 from example.com")).toBeInTheDocument();
