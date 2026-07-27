@@ -1,9 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PressingRecord } from "@/lib/pressings";
+
 import { PressingObject } from "./pressing-object";
 
-const pressing = {
+const pressing: PressingRecord = {
   id: "pressing-1",
   serialNumber: "P-0027",
   status: "ready",
@@ -25,7 +27,7 @@ const pressing = {
   },
   understanding: { archetype: "scene", contentType: "article", density: "quiet", atmosphere: [], generationBrief: "", motif: "", palette: ["#8d9c91"] },
   final: null,
-} as const;
+};
 
 describe("PressingObject", () => {
   it("renders exact authoritative anchors on both faces", () => {
