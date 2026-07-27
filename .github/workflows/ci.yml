@@ -36,7 +36,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint:web
+      - name: Run web lint
+        id: web_lint
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm lint:web 2>&1 | tee web-lint.log
       - name: Run web typecheck
         id: web_typecheck
         shell: bash
@@ -65,6 +70,7 @@ jobs:
         with:
           name: press-web-diagnostics
           path: |
+            web-lint.log
             web-typecheck.log
             web-test.log
           if-no-files-found: warn
