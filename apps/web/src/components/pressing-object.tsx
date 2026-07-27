@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 
 import type { PressingRecord } from "@/lib/pressings";
@@ -31,21 +32,33 @@ export function PressingObject({
 }: PressingObjectProps) {
   const accent = accentFor(pressing);
   const domain = pressing.source.domain ?? pressing.source.submittedUrl ?? pressing.anchors.submittedSourceIdentity;
-  const captured = new Date(pressing.source.capturedAt ?? pressing.createdAt ?? Date.now());
+  const capturedAt = pressing.source.capturedAt ?? pressing.createdAt;
+  const captured = capturedAt ? new Date(capturedAt) : null;
   const frame = useRef<number | null>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  useEffect(() => () => {
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+  }, []);
 
   function updateTilt(event: PointerEvent<HTMLElement>) {
     if (!interactive) return;
     const bounds = event.currentTarget.getBoundingClientRect();
     const x = (event.clientX - bounds.left) / bounds.width - 0.5;
     const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-    if (frame.current) cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => setTilt({ x: y * -12, y: x * 16 }));
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      setTilt({ x: y * -12, y: x * 16 });
+      frame.current = null;
+    });
   }
 
   function resetTilt() {
     if (!interactive) return;
+    if (frame.current !== null) {
+      cancelAnimationFrame(frame.current);
+      frame.current = null;
+    }
     setTilt({ x: 0, y: 0 });
   }
 
@@ -78,7 +91,7 @@ export function PressingObject({
             <div className="pressing-object__rear" aria-hidden="true" />
             <div className="pressing-object__edge" aria-hidden="true" />
             <div className="pressing-object__world" aria-hidden="true">
-              {assetUrl ? <img src={assetUrl} alt="" /> : <div className="pressing-object__fallback"><span /><span /><span /></div>}
+              {assetUrl ? <Image src={assetUrl} alt="" fill sizes={compact ? "50vw" : "34rem"} unoptimized /> : <div className="pressing-object__fallback"><span /><span /><span /></div>}
             </div>
             <div className="pressing-object__depth pressing-object__depth--one" aria-hidden="true" />
             <div className="pressing-object__depth pressing-object__depth--two" aria-hidden="true" />
@@ -95,7 +108,7 @@ export function PressingObject({
               <p className="pressing-object__serial">{pressing.serialNumber}</p>
               <dl>
                 <div><dt>Source</dt><dd>{domain}</dd></div>
-                <div><dt>Captured</dt><dd>{captured.toLocaleString()}</dd></div>
+                <div><dt>Captured</dt><dd>{captured ? captured.toLocaleString() : "Not recorded"}</dd></div>
                 <div><dt>Fragment</dt><dd>{pressing.anchors.selectedFragment}</dd></div>
                 <div><dt>Why it stopped me</dt><dd>{pressing.anchors.personalNote}</dd></div>
               </dl>

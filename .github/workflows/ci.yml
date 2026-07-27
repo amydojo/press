@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feat/genblaze-b2, feat/functional-product-slice, feat/visual-system-motion]
   push:
-    branches: [feat/foundation-contracts, feat/genblaze-b2]
+    branches: [feat/foundation-contracts, feat/genblaze-b2, feat/functional-product-slice, feat/visual-system-motion, feat/release-proof]
 
 permissions:
   contents: read
@@ -19,6 +19,7 @@ env:
   PRESS_VERSION: 0.2.0
   FIXTURE_MODE: true
   API_BASE_URL: http://127.0.0.1:8000
+  NEXT_PUBLIC_PRESS_API_BASE_URL: http://127.0.0.1:8000
   NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
 
 jobs:
@@ -35,7 +36,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint:web
+      - name: Run web lint
+        id: web_lint
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm lint:web 2>&1 | tee web-lint.log
       - name: Run web typecheck
         id: web_typecheck
         shell: bash
@@ -64,6 +70,7 @@ jobs:
         with:
           name: press-web-diagnostics
           path: |
+            web-lint.log
             web-typecheck.log
             web-test.log
           if-no-files-found: warn
@@ -153,7 +160,7 @@ jobs:
           if-no-files-found: error
 
   e2e-smoke:
-    name: E2E smoke
+    name: E2E and accessibility smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -190,7 +197,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: press-foundation-browser-evidence
+          name: press-release-browser-evidence
           path: |
             apps/web/test-results
             apps/web/playwright-report
